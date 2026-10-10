@@ -55,7 +55,71 @@ h2 {
 h2 small { color: var(--muted); font-weight: 400; }
 p { margin: 0 0 8px; font-size: 0.88rem; line-height: 1.4; }
 
-.intro { position: fixed; top: 16px; left: 16px; width: 320px; }
+.left {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  width: 320px;
+  display: grid;
+  gap: 12px;
+  max-height: calc(100% - 140px);
+  overflow-y: auto;
+  align-content: start;
+}
+h3 { font-size: 0.82rem; margin: 12px 0 6px; }
+
+/* Parks sunlight list */
+.inline { display: block; font-size: 0.8rem; color: var(--muted); }
+.inline select {
+  font: inherit;
+  font-size: 0.8rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 2px 4px;
+  margin-left: 4px;
+}
+.parks .hint { margin: 6px 0 0; }
+.park-list { list-style: none; margin: 8px 0 0; padding: 0; max-height: 220px; overflow-y: auto; }
+.park-list li {
+  display: grid;
+  grid-template-columns: 1fr 70px 52px;
+  gap: 8px;
+  align-items: center;
+  font-size: 0.8rem;
+  padding: 4px 6px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.park-list li:hover, .park-list li.active { background: #f1f5f9; }
+.park-list .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.park-list .bar { height: 6px; background: #f1f5f9; border-radius: 3px; overflow: hidden; }
+.park-list .bar span { display: block; height: 100%; background: #e11d48; border-radius: 3px; }
+.park-list .value { text-align: right; font-variant-numeric: tabular-nums; }
+.heat-legend { display: flex; align-items: center; gap: 6px; font-size: 0.72rem; color: var(--muted); margin-top: 6px; }
+.heat-legend .ramp {
+  flex: 1;
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, rgba(253, 224, 71, 0.3), rgb(251, 146, 60), rgb(225, 29, 72), rgb(88, 28, 135));
+}
+
+.tower-list { margin: 0; padding-left: 18px; font-size: 0.8rem; }
+.tower-list li { padding: 2px 0; }
+.tower-list li::marker { color: var(--muted); }
+.tower-list .row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.tower-list .row span { flex: none; font-variant-numeric: tabular-nums; }
+button.link {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: var(--accent);
+  cursor: pointer;
+  text-align: left;
+}
+button.link:hover { text-decoration: underline; }
+#park-card h2 { justify-content: space-between; }
+#park-card h2 span { color: var(--accent); }
 .hint { color: var(--muted); font-size: 0.78rem; margin: 8px 0 0; }
 
 .legend { list-style: none; padding: 0; margin: 0; font-size: 0.8rem; display: grid; gap: 4px; }
@@ -239,7 +303,8 @@ button.icon { border: none; background: none; cursor: pointer; color: var(--mute
 .when { display: grid; gap: 6px; flex: none; }
 
 @media (max-width: 900px) {
-  .intro { width: auto; right: 16px; }
+  .left { width: auto; right: 16px; }
+  .parks { display: none; }
   .intro .legend, .intro .hint { display: none; }
   .side { display: none; }
   .controls { flex-wrap: wrap; }

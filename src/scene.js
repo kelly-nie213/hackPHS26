@@ -119,6 +119,24 @@ export function createCityScene(container, radius) {
   shadowFill.position.y = shadowOutline.position.y = 1;
   scene.add(selectionEdges, shadowFill, shadowOutline);
 
+  // Selected park outline + sunlight-loss heatmap draped over the ground.
+  const parkOutline = new THREE.LineSegments(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: accent }));
+  parkOutline.position.y = 1.5;
+  const heatmap = new THREE.Mesh(
+    new THREE.PlaneGeometry(1, 1),
+    new THREE.MeshBasicMaterial({
+      transparent: true,
+      depthWrite: false,
+      polygonOffset: true,
+      polygonOffsetFactor: -6,
+      polygonOffsetUnits: -6,
+    }),
+  );
+  heatmap.rotation.x = -Math.PI / 2;
+  heatmap.position.y = 1.2;
+  heatmap.visible = false;
+  scene.add(parkOutline, heatmap);
+
   let buildingsMesh = null;
   let buildingStarts = []; // first vertex index of each building in the merged geometry
   let onFrame = null;
@@ -218,8 +236,49 @@ export function createCityScene(container, radius) {
     shadowOutline.geometry = new THREE.BufferGeometry().setFromPoints(pts);
   }
 
+  /** Outline park polygons (empty array clears). */
+  function setParkOutline(polygons) {
+    parkOutline.geometry.dispose();
+    const pts = polygons.flat().flatMap((ring) => ring.flatMap((p, i) => [toWorld(...p), toWorld(...ring[(i + 1) % ring.length])]));
+    parkOutline.geometry = new THREE.BufferGeometry().setFromPoints(pts);
+  }
+
+  /**
+   * Show an RGBA image (row 0 = north) over the ground.
+   * @param bounds {minX, maxY, width, height} in meters
+   */
+  function setHeatmap(rgba, W, H, bounds) {
+    heatmap.material.map?.dispose();
+    // DataTexture row 0 is the bottom (south) edge, so flip rows.
+    const flipped = new Uint8Array(rgba.length);
+    for (let r = 0; r < H; r++) flipped.set(rgba.subarray(r * W * 4, (r + 1) * W * 4), (H - 1 - r) * W * 4);
+    const tex = new THREE.DataTexture(flipped, W, H, THREE.RGBAFormat);
+    tex.magFilter = THREE.LinearFilter;
+    tex.needsUpdate = true;
+    heatmap.material.map = tex;
+    heatmap.material.needsUpdate = true;
+    heatmap.scale.set(bounds.width, bounds.height, 1);
+    heatmap.position.x = bounds.minX + bounds.width / 2;
+    heatmap.position.z = -(bounds.maxY - bounds.height / 2);
+  }
+
+  function showHeatmap(visible) {
+    heatmap.visible = visible && !!heatmap.material.map;
+  }
+
   /** Index of the building under a screen point, or -1. */
   const raycaster = new THREE.Raycaster();
+  const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+
+  /** [east, north] of the ground under a screen point, or null. */
+  function pickGround(clientX, clientY) {
+    const rect = renderer.domElement.getBoundingClientRect();
+    const ndc = new THREE.Vector2(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
+    raycaster.setFromCamera(ndc, camera);
+    const hit = raycaster.ray.intersectPlane(groundPlane, new THREE.Vector3());
+    return hit ? [hit.x, -hit.z] : null;
+  }
+
   function pickBuilding(clientX, clientY) {
     if (!buildingsMesh) return -1;
     const rect = renderer.domElement.getBoundingClientRect();
@@ -265,6 +324,10 @@ export function createCityScene(container, radius) {
     setSelectedBuildings,
     setShadowHighlight,
     pickBuilding,
+    pickGround,
+    setParkOutline,
+    setHeatmap,
+    showHeatmap,
     lookAt,
     set onFrame(fn) {
       onFrame = fn;

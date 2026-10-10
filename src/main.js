@@ -8,6 +8,7 @@ import { createSunPath } from './sunpath.js';
 import { buildGroundGrid, sunshineSamples, prepareFootprints, developmentShade } from './shade.js';
 import { groupDevelopments, rankDevelopments, gradeFor, describeClass, titleCase } from './developments.js';
 import { createSearchIndex, geocode } from './search.js';
+import { setupParks } from './parks-ui.js';
 
 const $ = (id) => document.getElementById(id);
 const DEG = 180 / Math.PI;
@@ -234,6 +235,7 @@ async function main() {
   function select(key, { fly = false } = {}) {
     const dev = devs.get(key);
     state.selected = dev ? key : null;
+    if (dev) parkPanel.clear();
     city.setSelectedBuildings(dev ? dev.buildings.map((i) => buildings[i]) : []);
     if (dev) {
       renderDevelopment(dev);
@@ -250,11 +252,29 @@ async function main() {
   city.canvas.addEventListener('pointerdown', (e) => (downAt = [e.clientX, e.clientY]));
   city.canvas.addEventListener('pointerup', (e) => {
     if (downAt && Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) < 5) {
-      select(buildings[city.pickBuilding(e.clientX, e.clientY)]?.dev ?? null);
+      const dev = buildings[city.pickBuilding(e.clientX, e.clientY)]?.dev;
+      const ground = dev ? null : city.pickGround(e.clientX, e.clientY);
+      const park = ground ? parkPanel.parkAt(ground) : -1;
+      if (park >= 0) parkPanel.select(park);
+      else select(dev ?? null);
     }
     downAt = null;
   });
   setupSearch(devs, buildings, select);
+
+  // Sunlight each park loses to tall towers over the weather year.
+  const parkPanel = setupParks({
+    city,
+    parks,
+    buildings,
+    devs,
+    grid,
+    weather,
+    lat,
+    lon,
+    onSelectPark: () => select(null),
+    onSelectDev: (key) => select(key, { fly: true }),
+  });
   $('b-close').addEventListener('click', () => select(null));
 
   slider.addEventListener('input', () => {
@@ -302,6 +322,7 @@ async function main() {
   setDate(/^\d{4}-\d{2}-\d{2}$/.test(params.get('date')) ? params.get('date') : state.date);
   setPlaying(params.get('play') !== '0');
   if (params.has('bin')) select(buildings.find((b) => b.bin === params.get('bin'))?.dev, { fly: true });
+  if (params.has('park')) parkPanel.select(parks.findIndex((p) => p.name === params.get('park')), { fly: true });
 }
 
 function fmtBig(n) {

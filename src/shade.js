@@ -63,18 +63,20 @@ export function buildGroundGrid(halfW, halfH, parks, buildings, cell = 4) {
 /**
  * Sun samples for a year of weather: {kx, ky, weight}. A building of height h casts
  * its roof outline at offset (h·kx, h·ky); weight = sunny hours this sample represents.
+ * groupDays = 1 gives one sample per actual sunny hour; 7 groups each hour of the day by week
+ * (sun position from the middle day, sunshine summed over the week) for ~6× less work.
  */
-export function sunshineSamples(weather, lat, lon) {
+export function sunshineSamples(weather, lat, lon, groupDays = 7) {
   const [y, m, d] = weather.start.slice(0, 10).split('-').map(Number);
   const days = Math.floor(weather.sunshine_duration.length / 24);
   const samples = [];
   let sunnyHours = 0;
-  for (let week = 0; week * 7 < days; week++) {
-    const mid = Math.min(week * 7 + 3, days - 1);
+  for (let week = 0; week * groupDays < days; week++) {
+    const mid = Math.min(week * groupDays + Math.floor(groupDays / 2), days - 1);
     const date = new Date(Date.UTC(y, m - 1, d + mid)).toISOString().slice(0, 10);
     for (let hour = 0; hour < 24; hour++) {
       let weight = 0;
-      for (let day = week * 7; day < Math.min(week * 7 + 7, days); day++) {
+      for (let day = week * groupDays; day < Math.min((week + 1) * groupDays, days); day++) {
         weight += weather.sunshine_duration[day * 24 + hour] / 3600;
       }
       if (weight <= 0) continue;

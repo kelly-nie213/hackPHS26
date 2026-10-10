@@ -20,6 +20,7 @@
     <div id="scene"></div>
     <div id="status">Loading…</div>
 
+    <div class="left">
     <header class="card intro">
       <h1>Shadow Ledger</h1>
       <p>Tall towers take sunlight from the public. Watch their shadows sweep across Central Park.</p>
@@ -37,7 +38,53 @@
       <p id="rank-status" class="hint"></p>
     </header>
 
+    <section class="card parks">
+      <h2>Sunlight lost in parks <small><span id="parks-year"></span> weather</small></h2>
+      <label class="inline">
+        Shade from towers taller than
+        <select id="tall-threshold">
+          <option value="100">100 m (330 ft)</option>
+          <option value="150" selected>150 m (490 ft)</option>
+          <option value="200">200 m (660 ft)</option>
+          <option value="300">300 m (980 ft)</option>
+        </select>
+      </label>
+      <p class="hint">Hours of direct sun the average spot in each park loses per year.</p>
+      <p id="parks-status" class="hint"></p>
+      <ol id="park-list" class="park-list"></ol>
+      <label class="toggle"><input type="checkbox" id="show-heatmap" checked /> Show heatmap</label>
+      <div class="heat-legend"><span>0 h</span><span class="ramp"></span><span>600+ h lost</span></div>
+    </section>
+    </div>
+
     <aside class="side">
+      <section class="card" id="park-card" hidden>
+        <h2><span id="park-name"></span> <button id="park-close" class="icon" aria-label="Clear park">✕</button></h2>
+        <p id="park-meta" class="sub"></p>
+        <div class="score">
+          <div>
+            <div id="park-lost" class="score-value"></div>
+            <div class="score-label">of direct sun lost per spot, per year</div>
+          </div>
+        </div>
+        <p id="park-share" class="verdict"></p>
+        <dl class="stats">
+          <dt>Worst spot</dt><dd id="park-worst"></dd>
+          <dt>Total lost</dt><dd id="park-total"></dd>
+          <dt>Towers counted</dt><dd>&ge; <span id="park-threshold"></span></dd>
+        </dl>
+        <h3>Towers taking its sun</h3>
+        <ol id="park-towers" class="tower-list"></ol>
+        <p id="park-towers-empty" class="hint" hidden>No towers this tall shade it.</p>
+        <details class="method">
+          <summary>How is this calculated?</summary>
+          <p>For each of the <span id="sunny-hours"></span> hours of direct sunshine recorded in 2025 (Open-Meteo, with each hour weighted by its actual minutes of sun), we cast every tower's shadow at that hour's sun position.</p>
+          <p>A spot in the park <em>loses</em> that hour if a tower shades it and no shorter building already does. Towers aren't charged for shade the park would have had anyway.</p>
+          <p>Per-tower hours can add up to more than the total, since towers' shadows overlap.</p>
+          <p class="fine">Towers outside the mapped area (south of ~42nd St) aren't included.</p>
+        </details>
+      </section>
+
       <section class="card" id="building-card" hidden>
         <h2><span id="b-name"></span> <button id="b-close" class="icon" aria-label="Clear selection">✕</button></h2>
         <p id="b-address" class="sub"></p>
