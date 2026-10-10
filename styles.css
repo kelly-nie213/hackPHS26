@@ -66,7 +66,7 @@ p { margin: 0 0 8px; font-size: 0.88rem; line-height: 1.4; }
   position: fixed;
   top: 16px;
   right: 16px;
-  width: 240px;
+  width: 270px;
   display: grid;
   gap: 12px;
   max-height: calc(100% - 140px);
@@ -91,6 +91,65 @@ p { margin: 0 0 8px; font-size: 0.88rem; line-height: 1.4; }
 }
 .stats dt { color: var(--muted); }
 .stats dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Search */
+.search { position: relative; margin: 10px 0; }
+#search {
+  width: 100%;
+  font: inherit;
+  font-size: 0.88rem;
+  padding: 8px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: white;
+  color: var(--text);
+}
+#search:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: transparent; }
+.search-results {
+  position: absolute;
+  z-index: 10;
+  left: 0;
+  right: 0;
+  margin: 4px 0 0;
+  padding: 4px;
+  list-style: none;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 6px 24px rgba(15, 23, 42, 0.2);
+}
+.search-results li { padding: 6px 8px; border-radius: 6px; font-size: 0.85rem; cursor: pointer; }
+.search-results li small { display: block; color: var(--muted); font-size: 0.75rem; }
+.search-results li.active, .search-results li:hover { background: #f1f5f9; }
+.search-msg { margin: 6px 0 0; font-size: 0.8rem; color: var(--muted); }
+
+/* Shade-per-home score */
+.sub { color: var(--muted); font-size: 0.8rem; margin: -4px 0 10px; }
+.score { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+.grade {
+  flex: none;
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: white;
+  background: #94a3b8;
+}
+.grade[data-grade='A'] { background: #15803d; }
+.grade[data-grade='B'] { background: #65a30d; }
+.grade[data-grade='C'] { background: #ca8a04; }
+.grade[data-grade='D'] { background: #ea580c; }
+.grade[data-grade='F'] { background: #b91c1c; }
+.grade[data-grade='none'] { background: #475569; }
+.score-value { font-size: 1.4rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.score-label { font-size: 0.75rem; color: var(--muted); }
+.verdict { font-size: 0.8rem; margin: 0 0 10px; }
+.method { margin-top: 10px; font-size: 0.78rem; }
+.method summary { cursor: pointer; color: var(--accent); }
+.method p { font-size: 0.78rem; margin: 6px 0 0; }
+.method .fine { color: var(--muted); }
 
 .toggle { display: flex; gap: 6px; align-items: center; font-size: 0.8rem; margin-top: 10px; color: var(--muted); }
 

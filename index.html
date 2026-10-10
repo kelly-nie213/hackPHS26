@@ -23,15 +23,50 @@
     <header class="card intro">
       <h1>Shadow Ledger</h1>
       <p>Tall towers take sunlight from the public. Watch their shadows sweep across Central Park.</p>
+      <div class="search">
+        <input id="search" type="search" placeholder="Search a building or address…" autocomplete="off" spellcheck="false" aria-label="Search a building or address" />
+        <ul id="search-results" class="search-results" hidden></ul>
+        <p id="search-msg" class="search-msg" hidden></p>
+      </div>
       <ul class="legend">
         <li><span class="swatch" style="background: linear-gradient(90deg, #e9e4da, #f0a35e, #e4572e, #a4161a)"></span>Building height (low → 450 m)</li>
         <li><span class="swatch" style="background: #7cb36b"></span>Parks</li>
-        <li><span class="swatch" style="background: #7c3aed"></span>Selected tower's shadow</li>
+        <li><span class="swatch" style="background: #7c3aed"></span>Selected building's shadow</li>
       </ul>
-      <p class="hint">Drag to pan · right-drag to tilt · scroll to zoom · click a building</p>
+      <p class="hint">Drag to pan · right-drag to tilt · scroll to zoom · click a building to score it</p>
+      <p id="rank-status" class="hint"></p>
     </header>
 
     <aside class="side">
+      <section class="card" id="building-card" hidden>
+        <h2><span id="b-name"></span> <button id="b-close" class="icon" aria-label="Clear selection">✕</button></h2>
+        <p id="b-address" class="sub"></p>
+        <div class="score">
+          <div id="b-grade" class="grade"></div>
+          <div>
+            <div id="b-per-home" class="score-value"></div>
+            <div class="score-label">public shade per home</div>
+          </div>
+        </div>
+        <p id="b-verdict" class="verdict"></p>
+        <dl class="stats">
+          <dt>Homes</dt><dd id="b-homes"></dd>
+          <dt>Height</dt><dd id="b-height"></dd>
+          <dt>Built</dt><dd id="b-year"></dd>
+          <dt>Sun blocked / yr</dt><dd id="b-blocked"></dd>
+          <dt>…in parks</dt><dd id="b-park"></dd>
+          <dt>Avg. shade cast</dt><dd id="b-avg"></dd>
+          <dt>Shadow now</dt><dd id="b-shadow-len"></dd>
+        </dl>
+        <details class="method">
+          <summary>How is this calculated?</summary>
+          <p>For every sunny hour of the weather year, we cast this building's shadow and measure how much <em>public ground</em> (streets, sidewalks, plazas, parks) it covers. Shade on rooftops doesn't count.</p>
+          <p><strong>Avg. shade cast</strong> is that area averaged over all sunny hours. <strong>Shade per home</strong> divides it by the homes on the lot (PLUTO residential units). Lower is better.</p>
+          <p>Grades compare against every residential building mapped: A = lowest 20% of shade per home, F = highest 20%.</p>
+          <p class="fine">Simplifications: shade that overlaps a neighbor's shadow still counts; shadows leaving the mapped area aren't counted.</p>
+        </details>
+      </section>
+
       <section class="card">
         <h2>Sun <span id="sun-state" class="pill"></span></h2>
         <div id="sunpath"></div>
@@ -53,16 +88,6 @@
         <label class="toggle"><input type="checkbox" id="use-weather" checked /> Dim the sun by cloud cover</label>
       </section>
 
-      <section class="card" id="building-card" hidden>
-        <h2><span id="b-name"></span> <button id="b-close" class="icon" aria-label="Clear selection">✕</button></h2>
-        <dl class="stats">
-          <dt>Height</dt><dd id="b-height"></dd>
-          <dt>Built</dt><dd id="b-year"></dd>
-          <dt>BIN</dt><dd id="b-bin"></dd>
-          <dt>Shadow length</dt><dd id="b-shadow-len"></dd>
-          <dt>Ground shaded</dt><dd id="b-shadow-area"></dd>
-        </dl>
-      </section>
     </aside>
 
     <footer class="card controls">

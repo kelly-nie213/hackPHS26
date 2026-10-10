@@ -115,7 +115,7 @@ export function createCityScene(container, radius) {
       polygonOffsetUnits: -4,
     }),
   );
-  const shadowOutline = new THREE.LineLoop(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: accent }));
+  const shadowOutline = new THREE.LineSegments(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: accent }));
   shadowFill.position.y = shadowOutline.position.y = 1;
   scene.add(selectionEdges, shadowFill, shadowOutline);
 
@@ -189,29 +189,33 @@ export function createCityScene(container, radius) {
     sunArc.geometry = new THREE.BufferGeometry().setFromPoints(pts);
   }
 
-  /** Outline a building (or clear with null). */
-  function setSelectedBuilding(building) {
+  /** Outline the given buildings (empty array clears). */
+  function setSelectedBuildings(list) {
     selectionEdges.geometry.dispose();
-    if (!building) {
+    if (!list.length) {
       selectionEdges.geometry = new THREE.BufferGeometry();
       return;
     }
-    const solid = extrudeBuilding(building);
-    selectionEdges.geometry = new THREE.EdgesGeometry(solid, 20);
-    solid.dispose();
+    const edges = list.map((b) => {
+      const solid = extrudeBuilding(b);
+      const e = new THREE.EdgesGeometry(solid, 20);
+      solid.dispose();
+      return e;
+    });
+    selectionEdges.geometry = mergeGeometries(edges);
+    edges.forEach((e) => e.dispose());
   }
 
-  /** Draw a ground polygon [[east, north], ...] (or clear with null). */
-  function setShadowHighlight(ring) {
+  /** Draw ground polygons, each [[east, north], ...] (empty array clears). */
+  function setShadowHighlight(rings) {
     shadowFill.geometry.dispose();
     shadowOutline.geometry.dispose();
-    if (!ring || ring.length < 3) {
-      shadowFill.geometry = new THREE.BufferGeometry();
-      shadowOutline.geometry = new THREE.BufferGeometry();
-      return;
-    }
-    shadowFill.geometry = new THREE.ShapeGeometry(new THREE.Shape(ring.map(([x, y]) => new THREE.Vector2(x, y)))).applyMatrix4(LAY_FLAT);
-    shadowOutline.geometry = new THREE.BufferGeometry().setFromPoints(ring.map(([x, y]) => toWorld(x, y)));
+    rings = rings.filter((r) => r.length >= 3);
+    const shapes = rings.map((ring) => new THREE.Shape(ring.map(([x, y]) => new THREE.Vector2(x, y))));
+    shadowFill.geometry = new THREE.ShapeGeometry(shapes).applyMatrix4(LAY_FLAT);
+    // Closed outlines as segment pairs.
+    const pts = rings.flatMap((ring) => ring.flatMap((p, i) => [toWorld(...p), toWorld(...ring[(i + 1) % ring.length])]));
+    shadowOutline.geometry = new THREE.BufferGeometry().setFromPoints(pts);
   }
 
   /** Index of the building under a screen point, or -1. */
@@ -258,7 +262,7 @@ export function createCityScene(container, radius) {
     addBuildings,
     setSun,
     setSunPath,
-    setSelectedBuilding,
+    setSelectedBuildings,
     setShadowHighlight,
     pickBuilding,
     lookAt,
