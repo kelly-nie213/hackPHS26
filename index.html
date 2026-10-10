@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Shadow Ledger</title>
+    <meta name="description" content="How much sunlight do NYC's skyscrapers take from the public?" />
+    <link rel="stylesheet" href="styles.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+      }
+    </script>
+    <script type="module" src="src/main.js"></script>
+  </head>
+  <body>
+    <div id="scene"></div>
+    <div id="status">Loading…</div>
+
+    <header class="card intro">
+      <h1>Shadow Ledger</h1>
+      <p>Tall towers take sunlight from the public. Watch their shadows sweep across Central Park.</p>
+      <ul class="legend">
+        <li><span class="swatch" style="background: linear-gradient(90deg, #e9e4da, #f0a35e, #e4572e, #a4161a)"></span>Building height (low → 450 m)</li>
+        <li><span class="swatch" style="background: #7cb36b"></span>Parks</li>
+        <li><span class="swatch" style="background: #7c3aed"></span>Selected tower's shadow</li>
+      </ul>
+      <p class="hint">Drag to pan · right-drag to tilt · scroll to zoom · click a building</p>
+    </header>
+
+    <aside class="side">
+      <section class="card">
+        <h2>Sun <span id="sun-state" class="pill"></span></h2>
+        <div id="sunpath"></div>
+        <dl class="stats">
+          <dt>Altitude</dt><dd id="altitude">—</dd>
+          <dt>Direction</dt><dd id="azimuth">—</dd>
+          <dt>Sunrise</dt><dd id="sunrise">—</dd>
+          <dt>Sunset</dt><dd id="sunset">—</dd>
+          <dt>Daylight</dt><dd id="daylength">—</dd>
+        </dl>
+      </section>
+
+      <section class="card">
+        <h2>Weather <small><span id="weather-year"></span> actuals</small></h2>
+        <dl class="stats">
+          <dt>Cloud cover</dt><dd id="cloud">—</dd>
+          <dt>Direct sun</dt><dd id="direct">—</dd>
+        </dl>
+        <label class="toggle"><input type="checkbox" id="use-weather" checked /> Dim the sun by cloud cover</label>
+      </section>
+
+      <section class="card" id="building-card" hidden>
+        <h2><span id="b-name"></span> <button id="b-close" class="icon" aria-label="Clear selection">✕</button></h2>
+        <dl class="stats">
+          <dt>Height</dt><dd id="b-height"></dd>
+          <dt>Built</dt><dd id="b-year"></dd>
+          <dt>BIN</dt><dd id="b-bin"></dd>
+          <dt>Shadow length</dt><dd id="b-shadow-len"></dd>
+          <dt>Ground shaded</dt><dd id="b-shadow-area"></dd>
+        </dl>
+      </section>
+    </aside>
+
+    <footer class="card controls">
+      <button id="play" class="play" aria-label="Play">▶</button>
+      <div class="timeline">
+        <div class="timeline-top">
+          <span id="clock" class="clock">—</span>
+          <div class="presets">
+            <button data-preset="03-20">Spring equinox</button>
+            <button data-preset="06-21">Summer solstice</button>
+            <button data-preset="09-22">Fall equinox</button>
+            <button data-preset="12-21">Winter solstice</button>
+          </div>
+        </div>
+        <input id="time" type="range" min="0" max="1439" step="1" aria-label="Time of day" />
+        <div class="ticks"><span>12 AM</span><span>6 AM</span><span>12 PM</span><span>6 PM</span><span>12 AM</span></div>
+      </div>
+      <div class="when">
+        <input id="date" type="date" aria-label="Date" />
+        <select id="speed" aria-label="Playback speed">
+          <option value="20">20 min/s</option>
+          <option value="60" selected>1 hr/s</option>
+          <option value="180">3 hr/s</option>
+        </select>
+      </div>
+    </footer>
+  </body>
+</html>
