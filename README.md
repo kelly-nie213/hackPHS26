@@ -1,6 +1,8 @@
-# Shadow Ledger
+# AFTERLIGHT: The Shadow Atlas
 
-Tall towers in NYC take sunlight from the public. We measure how much sunlight skyscrapers take, who loses it, and whether the city got enough housing in return.
+Tall towers in NYC take sunlight from the public. We make that trade-off visible with a browser-based civic science experience: moving solar geometry, modeled shadows, transparent evidence labels, and scenario comparisons.
+
+The current build is an integrated browser vertical slice from the project bible. It includes the real 3D neighborhood, seasonal Sun controls, building selection, an annualized park-sunlight estimate, location-aware Sky Map, and an OrbitalWatch dashboard with CelesTrak refresh support and explicit simulated fallbacks.
 
 ## Run it
 
@@ -9,6 +11,12 @@ No build step, no installs. Python 3 serves the site; three.js loads from a CDN.
 ```sh
 python3 -m http.server 8000
 # open http://localhost:8000
+```
+
+The included VS Code task **Afterlight local server** uses Ruby when Python is unavailable:
+
+```sh
+ruby --disable-gems -run -e httpd . -p 8000
 ```
 
 Links can jump to a moment and a tower: `http://localhost:8000/?date=2025-12-21&time=14:30&play=0&bin=1090180`
@@ -39,3 +47,8 @@ python3 scripts/fetch_data.py --year 2024
 | `src/weather.js` | Hourly weather lookup |
 | `src/sunpath.js` | Sun-path compass diagram |
 | `src/main.js` | Loads data, time-lapse slider and playback, UI |
+| `src/atlas.js` | Coarse, grid-weighted annual sunlight estimate and evidence-safe ledger metrics |
+
+## Evidence and limitations
+
+The blue **OBSERVED** label identifies sourced NYC geometry. The teal **INFERRED** label identifies quantities derived from solar geometry and the building model. The amber **FORECAST** label identifies hypothetical height scenarios. The annual ledger samples 10 representative dates and six two-hour time slices per date across a representative park grid; it is an estimate for comparison, not a precise annual measurement. Housing counts are not present in the current dataset, so the app intentionally does not invent a shade-per-home ratio.

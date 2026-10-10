@@ -3,7 +3,8 @@
   --card: rgba(255, 255, 255, 0.94);
   --text: #1e293b;
   --muted: #64748b;
-  --accent: #7c3aed;
+  --accent: #19d3c5;
+  --amber: #f6b84b;
   --sun: #f59e0b;
   --night: #1e2a4a;
   --day: #fcd34d;
@@ -20,6 +21,7 @@ html, body {
   overflow: hidden;
   background: var(--bg);
 }
+body.mode-open #scene, body.mode-open .intro, body.mode-open .side, body.mode-open .controls, body.mode-open .atlas-strip { visibility: hidden; }
 
 #scene { position: fixed; inset: 0; }
 #scene canvas { display: block; }
@@ -43,6 +45,43 @@ html, body {
   box-shadow: 0 4px 24px rgba(15, 23, 42, 0.18);
   padding: 14px 16px;
 }
+
+.modebar { position: fixed; z-index: 10; top: 16px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 5px; padding: 7px; white-space: nowrap; }
+.brand { padding: 0 10px 0 4px; font-size: .72rem; font-weight: 800; letter-spacing: .12em; color: #0f172a; }
+.brand small { color: var(--muted); font-weight: 500; letter-spacing: .05em; }
+.mode { border: 0; border-radius: 7px; padding: 7px 9px; background: transparent; color: var(--muted); font: inherit; font-size: .74rem; cursor: pointer; }
+.mode:hover, .mode.active { background: #0f172a; color: white; }
+.mode-panel { position: fixed; z-index: 4; top: 76px; left: 50%; transform: translateX(-50%); width: min(520px, calc(100% - 32px)); }
+#mode-screen { position: fixed; z-index: 5; inset: 0; overflow: auto; background: #091326; color: #e2e8f0; }
+.screen-inner { max-width: 1080px; margin: 0 auto; padding: 120px 42px 60px; min-height: 100%; }
+.screen-inner h1, .game-hud h1 { font-size: clamp(2rem, 5vw, 4.5rem); line-height: .98; letter-spacing: -.04em; margin: 8px 0 14px; color: #f8fafc; }.screen-lede { max-width: 560px; color: #a8bdd0; font-size: 1.1rem; }.screen-kicker { color: var(--accent); letter-spacing: .16em; font-size: .72rem; font-weight: 800; }.screen-note { color: #8093a7; font-size: .8rem; margin-top: 24px; }.screen-controls { display: grid; gap: 18px; align-content: center; }.screen-controls label { display: grid; gap: 7px; color: #a8bdd0; font-size: .82rem; }.screen-controls select { font: inherit; color: #e2e8f0; background: #142238; border: 1px solid #324862; border-radius: 7px; padding: 10px; }.screen-controls input { accent-color: var(--accent); }.sky-screen-grid, .orbit-screen-grid { display: grid; grid-template-columns: minmax(320px, 1fr) minmax(220px, .7fr); gap: 60px; align-items: center; margin-top: 50px; }.sky-dome.large { width: min(48vw, 500px); height: min(38vw, 380px); border-radius: 500px 500px 18px 18px; background: radial-gradient(circle at 50% 100%, #3287b3, #172554 70%); }.sky-dome.large .skyline-mask { height: 23%; }.sky-dome.large .star { transform: scale(1.7); }.sky-dome.large .sky-sun { font-size: 40px; }.screen-fact { display: grid; gap: 5px; border-left: 2px solid var(--amber); padding: 12px; background: #101e32; color: #9fb2c5; font-size: .82rem; line-height: 1.4; }.screen-fact b { color: var(--amber); font-size: .68rem; letter-spacing: .1em; }.orbit-screen-grid { margin-top: 35px; }.orbit-stage.large { height: min(48vw, 500px); min-height: 340px; border-radius: 15px; }.orbit-stage.large .orbit-earth { width: 150px; height: 150px; font-size: .9rem; }.orbit-stage.large .ring-a { width: 260px; height: 105px; }.orbit-stage.large .ring-b { width: 390px; height: 160px; }.orbit-stage.large .ring-c { width: 480px; height: 210px; }.orbit-list { gap: 9px; }.orbit-list .object-button { text-align: left; background: #101e32; border-color: #324862; color: #b6c8d9; }.orbit-list .object-button.active { color: var(--accent); border-color: var(--accent); }.game-screen { position: relative; height: 100%; min-height: 720px; overflow: hidden; }.game-screen #game-world { position: absolute; inset: 0; }.game-screen canvas { display: block; }.game-hud { position: absolute; z-index: 2; top: 38px; left: 42px; width: min(440px, calc(100% - 84px)); text-shadow: 0 2px 12px #000; }.game-hud h1 { font-size: clamp(2rem, 4vw, 4rem); }.game-hud p { color: #c0d1df; }.game-status { margin-top: 18px; padding: 12px; border-left: 2px solid var(--amber); background: #07101dcc; color: #f8d083; text-shadow: none; font-size: .85rem; }.game-start { position: absolute; z-index: 3; left: 50%; top: 55%; transform: translate(-50%, -50%); border: 1px solid var(--accent); background: #0b2933ee; color: white; border-radius: 999px; padding: 15px 24px; font: inherit; letter-spacing: .1em; cursor: pointer; }.game-screen .chrona-tabs { max-width: 360px; }.game-screen .chrona-tab { background: #0e1b2bcc; border-color: #48617a; color: #b6c8d9; text-shadow: none; }.game-screen .chrona-tab.active { color: #06181b; background: var(--accent); }
+.module-heading { display: flex; justify-content: space-between; align-items: start; gap: 10px; }
+.module-heading h2 { margin-top: 3px; font-size: 1.05rem; }
+.module-control { display: grid; gap: 4px; font-size: .75rem; color: var(--muted); margin-top: 9px; }
+.module-control select { font: inherit; color: var(--text); border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px; background: white; }
+.module-control input { accent-color: var(--accent); }
+.module-readout { background: #f1f5f9; border-radius: 7px; padding: 8px; margin: 9px 0 0; font-size: .78rem; line-height: 1.35; }
+.sky-module { display: grid; grid-template-columns: 180px 1fr; gap: 12px; align-items: center; margin-top: 8px; }
+.sky-dome { width: 180px; height: 140px; position: relative; overflow: hidden; border-radius: 180px 180px 10px 10px; background: radial-gradient(circle at 50% 100%, #8ec5ff, #172554 70%); border: 1px solid #64748b; }
+.skyline-mask { position: absolute; left: 0; right: 0; bottom: 0; height: 28%; background: #172033; clip-path: polygon(0 65%, 8% 55%, 12% 72%, 20% 42%, 27% 62%, 34% 20%, 41% 55%, 49% 35%, 56% 62%, 64% 10%, 73% 49%, 81% 30%, 88% 62%, 96% 25%, 100% 48%, 100% 100%, 0 100%); }
+.sky-label { position: absolute; color: #dbeafe; font-size: .62rem; z-index: 1; }.north { top: 7px; left: 50%; }.south { bottom: 7px; left: 50%; }.east { right: 8px; top: 50%; }.west { left: 8px; top: 50%; }
+.star { position: absolute; color: white; font-size: 12px; }.s1 { left: 25%; top: 25%; }.s2 { left: 70%; top: 18%; }.s3 { left: 55%; top: 42%; }.s4 { left: 80%; top: 57%; }.sky-sun { position: absolute; left: 50%; top: 58%; color: var(--amber); font-size: 21px; z-index: 2; transition: transform .25s; }
+.orbit-module { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: center; margin-top: 8px; }.orbit-stage { position: relative; height: 170px; display: grid; place-items: center; overflow: hidden; background: radial-gradient(circle, #172554, #0f172a 70%); border-radius: 8px; }.orbit-glow { position: absolute; width: 86px; height: 86px; border-radius: 50%; background: rgba(34, 211, 238, .12); }.orbit-earth { width: 70px; height: 70px; display: grid; place-items: center; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #79d5d0, #155e75 62%, #082f49); color: white; font-size: .6rem; z-index: 1; box-shadow: 0 0 20px #22d3ee55; }.orbit-ring { position: absolute; border: 1px solid #67e8f955; border-radius: 50%; transform: rotate(-22deg); }.ring-a { width: 125px; height: 50px; }.ring-b { width: 190px; height: 75px; transform: rotate(32deg); }.ring-c { width: 235px; height: 105px; transform: rotate(-55deg); }.orbit-object { position: absolute; z-index: 2; border: 0; background: none; color: var(--amber); cursor: pointer; }.sat-a { top: 25px; left: 58%; }.sat-b { bottom: 24px; left: 18%; color: #94a3b8; }.sat-c { top: 45%; right: 10%; color: #f87171; }.orbit-objects { display: grid; gap: 5px; }.object-button, .chrona-tab, .mission-actions button { border: 1px solid #cbd5e1; background: white; color: var(--text); border-radius: 6px; padding: 7px; text-align: left; font: inherit; font-size: .7rem; cursor: pointer; }.object-button.active, .chrona-tab.active { border-color: var(--accent); background: #ecfeff; color: #115e59; }
+.chrona-tabs { display: flex; gap: 5px; margin: 12px 0 8px; }.chrona-tab { text-align: center; flex: 1; font-weight: 700; }.chrona-card { padding: 12px; background: #f8fafc; border-left: 3px solid var(--amber); border-radius: 5px; }.chrona-card h3 { margin: 4px 0; font-size: .95rem; }.chrona-card p { margin: 5px 0; }.mission-progress { height: 5px; background: #e2e8f0; border-radius: 3px; margin-top: 10px; }.mission-progress span { display: block; height: 100%; width: 33%; background: var(--amber); border-radius: 3px; }.chrona-card small { color: var(--muted); font-size: .67rem; }.mission-actions { display: flex; gap: 6px; margin-top: 10px; }.mission-actions button { text-align: center; flex: 1; }
+.mode-panel h2 { color: var(--accent); }
+.atlas-strip { position: fixed; z-index: 2; left: 16px; bottom: 112px; display: flex; align-items: center; gap: 7px; padding: 7px 10px; font-size: .68rem; }
+.orbital-dashboard { display: grid; grid-template-columns: minmax(420px, 1fr) 310px; gap: 18px; margin-top: 30px; }.orbit-world { min-height: 510px; border: 1px solid #29445e; border-radius: 12px; overflow: hidden; background: #050b18; }.orbit-hud { display: grid; align-content: start; gap: 15px; padding: 18px; border: 1px solid #29445e; border-radius: 12px; background: #0d1a2d; }.orbit-hud label { display: grid; gap: 6px; color: #9fb2c5; font-size: .75rem; }.orbit-hud input { accent-color: var(--accent); }.orbit-legend { display: flex; gap: 10px; flex-wrap: wrap; color: #c7d5e1; font-size: .65rem; }.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; }.dot.green { background: #35e69a; }.dot.red { background: #f05d67; }.dot.gold { background: #f6b84b; }.orbit-section { display: grid; gap: 7px; border-top: 1px solid #29445e; padding-top: 12px; }.orbit-section b, .orbit-analytics b { color: var(--amber); font-size: .67rem; letter-spacing: .1em; }.alert-row { display: flex; justify-content: space-between; border: 1px solid #49637d; border-radius: 5px; background: #12243a; color: #c8d7e4; padding: 8px; font: inherit; font-size: .7rem; text-align: left; }.alert-row.active { border-color: #f05d67; }.alert-row span { color: #f05d67; }.burn-button { border: 0; border-radius: 5px; padding: 9px; background: #a4161a; color: white; font: inherit; font-size: .7rem; cursor: pointer; }.orbit-analytics { display: grid; grid-template-columns: auto auto 1fr; align-items: center; gap: 12px; margin-top: 16px; padding: 13px; border: 1px solid #29445e; border-radius: 9px; background: #0d1a2d; color: #9fb2c5; font-size: .72rem; }.orbit-analytics label { display: flex; gap: 8px; align-items: center; }.orbit-analytics input { accent-color: var(--accent); }.cascade-bars { display: flex; align-items: end; height: 50px; gap: 3px; grid-column: 1 / -1; }.cascade-bars i { flex: 1; background: linear-gradient(#f05d67, #762d4c); height: calc(18px + var(--bar, 20px)); }.cascade-bars i:nth-child(2) { --bar: 27px; }.cascade-bars i:nth-child(3) { --bar: 40px; }.cascade-bars i:nth-child(4) { --bar: 52px; }.cascade-bars i:nth-child(5) { --bar: 35px; }.cascade-bars i:nth-child(6) { --bar: 28px; }.cascade-bars i:nth-child(7) { --bar: 48px; }.cascade-bars i:nth-child(8) { --bar: 30px; }
+.sky-actions { display: flex; gap: 7px; }.sky-actions button, .upload-button { flex: 1; padding: 9px; border: 1px solid #49637d; border-radius: 6px; background: #12243a; color: #d8e6f1; font: inherit; font-size: .7rem; text-align: center; cursor: pointer; }.upload-button input { display: none; }.sky-education { display: grid; grid-template-columns: auto repeat(3, 1fr); gap: 10px; margin-top: 18px; padding: 13px; border: 1px solid #29445e; border-radius: 9px; color: #a8bdd0; font-size: .75rem; }.sky-education b { color: var(--amber); font-size: .67rem; letter-spacing: .1em; }
+.skymap-dashboard { display: grid; grid-template-columns: minmax(420px, 1fr) 260px; gap: 18px; margin-top: 30px; }.sky-world { min-height: 510px; border: 1px solid #29445e; border-radius: 12px; overflow: hidden; background: #050b18; }.sky-hud { display: grid; align-content: start; gap: 12px; padding: 18px; border: 1px solid #29445e; border-radius: 12px; background: #0d1a2d; color: #c8d7e4; }.sky-hud > b { color: var(--amber); font-size: .68rem; letter-spacing: .1em; }.sky-hud label { display: grid; gap: 6px; color: #9fb2c5; font-size: .75rem; }.sky-hud input[type=range] { accent-color: var(--accent); }.sky-hud > button { border: 1px solid #49637d; background: #12243a; color: #d8e6f1; padding: 9px; border-radius: 6px; cursor: pointer; font: inherit; font-size: .7rem; }.sky-hud .sky-education { display: grid; grid-template-columns: 1fr; margin: 0; padding: 0; border: 0; font-size: .72rem; }
+.refresh-button { border: 1px solid #19d3c5; background: #103542; color: #d8ffff; padding: 9px; border-radius: 6px; cursor: pointer; font: inherit; font-size: .7rem; }
+.eyebrow, .section-label { color: var(--muted); font-size: .64rem; letter-spacing: .12em; font-weight: 800; }
+.evidence { padding: 3px 6px; border-radius: 4px; font-size: .64rem; font-weight: 700; }
+.observed { background: #dbeafe; color: #1e40af; } .inferred { background: #ccfbf1; color: #115e59; } .forecast { background: #fef3c7; color: #92400e; }
+.atlas-source { color: var(--muted); }
+.scenario-box, .ledger-box { border-top: 1px solid #e2e8f0; margin-top: 11px; padding-top: 10px; }
+.scenario-box label { display: flex; justify-content: space-between; margin: 6px 0 2px; font-size: .78rem; }
+#scenario-height { width: 100%; accent-color: var(--accent); }
+.microcopy { color: var(--muted); font-size: .68rem; line-height: 1.35; margin: 6px 0 0; }
 
 h1 { margin: 0 0 4px; font-size: 1.35rem; }
 h2 {
@@ -180,6 +219,11 @@ button.icon { border: none; background: none; cursor: pointer; color: var(--mute
 .when { display: grid; gap: 6px; flex: none; }
 
 @media (max-width: 900px) {
+  .modebar { left: 16px; right: 16px; transform: none; overflow-x: auto; }
+  .brand { display: none; }
+  .atlas-strip { right: 16px; bottom: 112px; overflow-x: auto; }
+  .atlas-source { display: none; }
+  .screen-inner { padding: 100px 22px 40px; }.sky-screen-grid, .orbit-screen-grid { grid-template-columns: 1fr; gap: 26px; margin-top: 28px; }.sky-dome.large { width: 100%; height: 270px; }.orbit-stage.large { min-height: 270px; }.game-hud { left: 22px; width: calc(100% - 44px); top: 22px; }.game-hud h1 { font-size: 2.2rem; }.orbital-dashboard, .skymap-dashboard { grid-template-columns: 1fr; }.orbit-world, .sky-world { min-height: 330px; }.orbit-analytics { grid-template-columns: 1fr; }
   .intro { width: auto; right: 16px; }
   .intro .legend, .intro .hint { display: none; }
   .side { display: none; }

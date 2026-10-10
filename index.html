@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Shadow Ledger</title>
-    <meta name="description" content="How much sunlight do NYC's skyscrapers take from the public?" />
+    <title>Afterlight — The Shadow Atlas</title>
+    <meta name="description" content="A living atlas for investigating how skyscrapers redistribute sunlight." />
     <link rel="stylesheet" href="styles.css" />
     <script type="importmap">
       {
@@ -19,10 +19,18 @@
   <body>
     <div id="scene"></div>
     <div id="status">Loading…</div>
+    <main id="mode-screen" hidden></main>
+
+    <nav class="modebar card" style="z-index: 20; pointer-events: auto" aria-label="Atlas modes">
+      <span class="brand">AFTERLIGHT <small>// THE SHADOW ATLAS</small></span>
+      <button class="mode active" data-mode="city">Investigate the City</button>
+      <button class="mode" data-mode="sky">Explore the Sky</button>
+      <button class="mode" data-mode="orbit">Enter Orbit</button>
+    </nav>
 
     <header class="card intro">
-      <h1>Shadow Ledger</h1>
-      <p>Tall towers take sunlight from the public. Watch their shadows sweep across Central Park.</p>
+      <h1>Shadow City</h1>
+      <p>Make an invisible civic trade-off visible. Watch tower shadows sweep across public space, then inspect the evidence behind the model.</p>
       <ul class="legend">
         <li><span class="swatch" style="background: linear-gradient(90deg, #e9e4da, #f0a35e, #e4572e, #a4161a)"></span>Building height (low → 450 m)</li>
         <li><span class="swatch" style="background: #7cb36b"></span>Parks</li>
@@ -30,6 +38,16 @@
       </ul>
       <p class="hint">Drag to pan · right-drag to tilt · scroll to zoom · click a building</p>
     </header>
+
+    <section id="mode-panel" class="card mode-panel" hidden></section>
+
+    <div class="atlas-strip card" aria-label="Evidence status">
+      <span class="eyebrow">LIVING ATLAS</span>
+      <span class="evidence observed">OBSERVED · NYC building footprints</span>
+      <span class="evidence inferred">INFERRED · solar geometry + shadow model</span>
+      <span class="evidence forecast">FORECAST · scenario tests</span>
+      <span class="atlas-source">Sources and assumptions are shown with each estimate.</span>
+    </div>
 
     <aside class="side">
       <section class="card">
@@ -62,6 +80,22 @@
           <dt>Shadow length</dt><dd id="b-shadow-len"></dd>
           <dt>Ground shaded</dt><dd id="b-shadow-area"></dd>
         </dl>
+        <div class="scenario-box">
+          <div class="section-label">FORECAST · scenario lab</div>
+          <label for="scenario-height">Test height <output id="scenario-height-value">—</output></label>
+          <input id="scenario-height" type="range" min="10" max="500" step="1" />
+          <p class="microcopy">A hypothetical height changes the modeled shadow only. It is not a prediction.</p>
+        </div>
+        <div class="ledger-box">
+          <div class="section-label">ANNUAL PUBLIC SUNLIGHT LEDGER</div>
+          <dl class="stats">
+            <dt>With tower</dt><dd id="ledger-with">—</dd>
+            <dt>Without tower</dt><dd id="ledger-without">—</dd>
+            <dt>Marginal loss</dt><dd id="ledger-loss">—</dd>
+            <dt>Shade / home</dt><dd id="ledger-home">Unknown</dd>
+          </dl>
+          <p class="microcopy">Estimate: 10 dates × 6 two-hour samples, grid-weighted across a representative park. Housing count unavailable, so no ratio is invented.</p>
+        </div>
       </section>
     </aside>
 

@@ -1,0 +1,12 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Afterlight local server",
+			"type": "shell",
+			"command": "ruby --disable-gems -run -e httpd . -p 8000",
+			"isBackground": true,
+			"problemMatcher": []
+		}
+	]
+}
