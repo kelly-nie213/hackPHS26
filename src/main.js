@@ -5,6 +5,10 @@ import { buildingShadow } from './shadows.js';
 import { weatherAt } from './weather.js';
 import { createCityScene } from './scene.js';
 import { createSunPath } from './sunpath.js';
+import { buildGroundGrid, sunshineSamples, prepareFootprints, developmentShade } from './shade.js';
+import { groupDevelopments, rankDevelopments, gradeFor, describeClass, titleCase } from './developments.js';
+import { createSearchIndex, geocode } from './search.js';
+import { setupParks } from './parks-ui.js';
 
 const $ = (id) => document.getElementById(id);
 const DEG = 180 / Math.PI;
@@ -20,7 +24,7 @@ const state = {
   speed: 60, // simulated minutes per real second
   useWeather: true,
   day: null, // solarDay() result for state.date
-  selected: -1,
+  selected: null, // development key (tax lot)
 };
 
 async function loadJSON(url) {
@@ -100,6 +104,20 @@ async function main() {
   city.lookAt(...proj.toXY(START_VIEW.lon, START_VIEW.lat), START_VIEW.offset);
   status.remove();
 
+  // Shade-per-home setup: ground grid, a year of sunny hours, developments, background ranking.
+  const devs = groupDevelopments(buildings, buildingData.lots);
+  const grid = buildGroundGrid(halfW, halfH, parks, buildings);
+  const { samples: sunSamples, sunnyHours } = sunshineSamples(weather, lat, lon);
+  let ranking = null;
+  rankDevelopments(devs, buildings, grid, sunSamples, {
+    onProgress: (p) => ($('rank-status').textContent = `Ranking buildings… ${Math.round(p * 100)}%`),
+    onDone: (r) => {
+      ranking = r;
+      $('rank-status').textContent = '';
+      updateSelection();
+    },
+  });
+
   const sunPath = createSunPath($('sunpath'));
   const slider = $('time');
   const dateInput = $('date');
@@ -157,38 +175,107 @@ async function main() {
     updateSelection(sun);
   }
 
-  function updateSelection(sun = sunPosition(nycTime(state.date, state.minutes), lat, lon)) {
-    const card = $('building-card');
-    const b = buildings[state.selected];
-    card.hidden = !b;
-    if (!b) {
-      city.setShadowHighlight(null);
-      return;
-    }
-    const shadow = buildingShadow(b.polygons, b.height, sun);
-    city.setShadowHighlight(shadow?.ring);
-    $('b-name').textContent = b.name || `Building ${b.bin}`;
-    $('b-height').textContent = `${Math.round(b.height)} m (${Math.round(b.height * M_TO_FT).toLocaleString()} ft)`;
-    $('b-year').textContent = b.year ?? 'unknown';
-    $('b-bin').textContent = b.bin;
-    $('b-shadow-len').textContent = shadow ? `${Math.round(shadow.length).toLocaleString()} m` : 'no sun';
-    $('b-shadow-area').textContent = shadow ? `${Math.round(shadow.area).toLocaleString()} m²` : '—';
+  function devShade(dev) {
+    dev.shade ??= developmentShade(prepareFootprints(dev.buildings.map((i) => buildings[i])), grid, sunSamples);
+    return dev.shade;
   }
 
-  function select(index) {
-    state.selected = index;
-    city.setSelectedBuilding(buildings[index] ?? null);
+  function updateSelection(sun = sunPosition(nycTime(state.date, state.minutes), lat, lon)) {
+    const dev = devs.get(state.selected);
+    $('building-card').hidden = !dev;
+    if (!dev) {
+      city.setShadowHighlight([]);
+      return;
+    }
+    const shadows = dev.buildings.map((i) => buildingShadow(buildings[i].polygons, buildings[i].height, sun)).filter(Boolean);
+    city.setShadowHighlight(shadows.map((sh) => sh.ring));
+    const longest = Math.max(0, ...shadows.map((sh) => sh.length));
+    $('b-shadow-len').textContent = shadows.length ? `${Math.round(longest).toLocaleString()} m long` : 'sun is down';
+  }
+
+  /** Static facts + the annual score; only recomputed when the selection changes or ranking lands. */
+  function renderDevelopment(dev) {
+    const lot = dev.lot;
+    const shade = devShade(dev);
+    $('b-name').textContent = dev.name;
+    const address = titleCase(lot?.address);
+    $('b-address').textContent = [address !== dev.name ? address : null, describeClass(lot?.class)].filter(Boolean).join(' · ');
+    $('b-homes').textContent = dev.homes.toLocaleString();
+    $('b-height').textContent = `${Math.round(dev.height)} m (${Math.round(dev.height * M_TO_FT).toLocaleString()} ft)`;
+    $('b-year').textContent = dev.year ?? 'unknown';
+    $('b-blocked').textContent = `${fmtBig(shade.publicM2h)} m²·h`;
+    $('b-park').textContent = `${fmtBig(shade.parkM2h)} m²·h`;
+    $('b-avg').textContent = `${Math.round(shade.publicM2h / sunnyHours).toLocaleString()} m²`;
+
+    const grade = $('b-grade');
+    if (dev.homes === 0) {
+      grade.textContent = '✕';
+      grade.dataset.grade = 'none';
+      $('b-per-home').textContent = 'No homes';
+      $('b-verdict').textContent = 'Creates no housing, so all of its shade buys zero homes.';
+      return;
+    }
+    const perHome = shade.publicM2h / dev.homes;
+    $('b-per-home').textContent = `${Math.round(perHome / sunnyHours).toLocaleString()} m²`;
+    if (!ranking) {
+      grade.textContent = '…';
+      grade.dataset.grade = 'pending';
+      $('b-verdict').textContent = 'Ranking against nearby buildings…';
+      return;
+    }
+    const pct = ranking.percentile(perHome);
+    grade.textContent = gradeFor(pct);
+    grade.dataset.grade = gradeFor(pct);
+    $('b-verdict').textContent =
+      pct >= 0.5
+        ? `Casts more shade per home than ${Math.round(pct * 100)}% of the ${ranking.count.toLocaleString()} residential buildings mapped.`
+        : `Casts less shade per home than ${Math.round((1 - pct) * 100)}% of the ${ranking.count.toLocaleString()} residential buildings mapped.`;
+  }
+
+  function select(key, { fly = false } = {}) {
+    const dev = devs.get(key);
+    state.selected = dev ? key : null;
+    if (dev) parkPanel.clear();
+    city.setSelectedBuildings(dev ? dev.buildings.map((i) => buildings[i]) : []);
+    if (dev) {
+      renderDevelopment(dev);
+      if (fly) {
+        const ring = buildings[dev.buildings[0]].polygons[0][0];
+        city.lookAt(ring[0][0], ring[0][1], [-200 - dev.height, 250 + 1.5 * dev.height, 400 + 1.8 * dev.height]);
+      }
+    }
     updateSelection();
   }
 
-  // Click (not drag) on a building to select it.
+  // Click (not drag) on a building to select its development.
   let downAt = null;
   city.canvas.addEventListener('pointerdown', (e) => (downAt = [e.clientX, e.clientY]));
   city.canvas.addEventListener('pointerup', (e) => {
-    if (downAt && Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) < 5) select(city.pickBuilding(e.clientX, e.clientY));
+    if (downAt && Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) < 5) {
+      const dev = buildings[city.pickBuilding(e.clientX, e.clientY)]?.dev;
+      const ground = dev ? null : city.pickGround(e.clientX, e.clientY);
+      const park = ground ? parkPanel.parkAt(ground) : -1;
+      if (park >= 0) parkPanel.select(park);
+      else select(dev ?? null);
+    }
     downAt = null;
   });
-  $('b-close').addEventListener('click', () => select(-1));
+  setupSearch(devs, buildings, select);
+
+  // Sunlight each park loses to tall towers over the weather year.
+  const parkPanel = setupParks({
+    city,
+    parks,
+    buildings,
+    devs,
+    grid,
+    weather,
+    lat,
+    lon,
+    onSelectPark: () => select(null),
+    onSelectDev: (key) => select(key, { fly: true }),
+  });
+  $('b-close').addEventListener('click', () => select(null));
 
   slider.addEventListener('input', () => {
     state.minutes = +slider.value;
@@ -234,7 +321,85 @@ async function main() {
   if (Number.isFinite(hh)) state.minutes = hh * 60 + (mm || 0);
   setDate(/^\d{4}-\d{2}-\d{2}$/.test(params.get('date')) ? params.get('date') : state.date);
   setPlaying(params.get('play') !== '0');
-  if (params.has('bin')) select(buildings.findIndex((b) => b.bin === params.get('bin')));
+  if (params.has('bin')) select(buildings.find((b) => b.bin === params.get('bin'))?.dev, { fly: true });
+  if (params.has('park')) parkPanel.select(parks.findIndex((p) => p.name === params.get('park')), { fly: true });
+}
+
+function fmtBig(n) {
+  if (n >= 1e6) return `${(n / 1e6).toFixed(n >= 1e7 ? 0 : 1)} million`;
+  return Math.round(n).toLocaleString();
+}
+
+/** Search box: local suggestions while typing; Enter falls back to NYC GeoSearch. */
+function setupSearch(devs, buildings, select) {
+  const input = $('search');
+  const list = $('search-results');
+  const msg = $('search-msg');
+  const entries = [];
+  for (const dev of devs.values()) {
+    if (dev.lot?.address) entries.push({ label: titleCase(dev.lot.address), key: dev.key });
+    if (dev.name !== titleCase(dev.lot?.address)) entries.push({ label: dev.name, key: dev.key });
+  }
+  const index = createSearchIndex(entries);
+  let results = [];
+  let active = 0;
+
+  const say = (text) => {
+    msg.textContent = text;
+    msg.hidden = !text;
+  };
+  const choose = (item) => {
+    input.value = item.label;
+    list.hidden = true;
+    say('');
+    select(item.key, { fly: true });
+  };
+  const render = () => {
+    list.replaceChildren(
+      ...results.map((item, i) => {
+        const li = document.createElement('li');
+        li.textContent = item.label;
+        if (item.hint) li.append(Object.assign(document.createElement('small'), { textContent: item.hint }));
+        li.classList.toggle('active', i === active);
+        li.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          choose(item);
+        });
+        return li;
+      }),
+    );
+    list.hidden = !results.length;
+  };
+
+  input.addEventListener('input', () => {
+    results = index.suggest(input.value);
+    active = 0;
+    say('');
+    render();
+  });
+  input.addEventListener('blur', () => (list.hidden = true));
+  input.addEventListener('keydown', async (e) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      active = (active + (e.key === 'ArrowDown' ? 1 : -1) + results.length) % Math.max(1, results.length);
+      render();
+    } else if (e.key === 'Escape') {
+      list.hidden = true;
+    } else if (e.key === 'Enter') {
+      if (results.length && !list.hidden) return choose(results[active]);
+      const text = input.value.trim();
+      if (!text) return;
+      say('Looking up address…');
+      try {
+        const hit = await geocode(text.match(/manhattan|new york|ny\b/i) ? text : `${text}, Manhattan`);
+        const building = hit && (buildings.find((b) => b.bin === hit.bin) ?? buildings.find((b) => b.bbl === hit.bbl));
+        if (building) choose({ label: titleCase(hit.label.split(',')[0]), key: building.dev });
+        else say(hit ? `${hit.label.split(',')[0]} is outside the mapped area (Midtown to 110th St around Central Park).` : 'No address found.');
+      } catch {
+        say('Address lookup failed. Check your connection.');
+      }
+    }
+  });
 }
 
 main();
