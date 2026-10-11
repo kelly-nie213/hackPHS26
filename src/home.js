@@ -412,7 +412,7 @@ async function setupCities() {
 
   const sum = (key) => cities.reduce((n, c) => n + c.stats[key], 0);
   const words = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten'];
-  $('cities-title').textContent = `${words[cities.length] ?? cities.length} downtowns, one ledger`;
+  $('cities-title').textContent = `${words[cities.length] ?? cities.length} cities to explore`;
   $('t-cities').textContent = cities.length;
   $('t-buildings').textContent = fmt(sum('buildings'));
   $('t-towers').textContent = fmt(sum('towers150'));

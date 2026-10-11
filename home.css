@@ -61,7 +61,7 @@ h1, h2 { font-family: var(--display); font-weight: 700; letter-spacing: -0.01em;
   background: linear-gradient(135deg, var(--sun) 50%, #1e293b 50%);
   box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.25);
 }
-.nav-links { display: flex; gap: clamp(12px, 3vw, 28px); font-size: 0.92rem; }
+.nav-links { display: flex; gap: clamp(12px, 2vw, 24px); font-size: 0.92rem; }
 .nav-links a { text-decoration: none; color: rgba(226, 232, 240, 0.85); }
 .nav-links a:hover { color: white; }
 
@@ -238,6 +238,51 @@ h1, h2 { font-family: var(--display); font-weight: 700; letter-spacing: -0.01em;
 .badge.official { color: #bbf7d0; border-color: rgba(134, 239, 172, 0.4); }
 .go { color: var(--sun); font-weight: 600; white-space: nowrap; }
 
+/* ---------- Problem ---------- */
+.ledger { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 28px; }
+.ledger-col { padding: 22px; border-radius: var(--radius); background: var(--bg-2); border: 1px solid var(--line); border-top: 3px solid var(--park); }
+.ledger-col.takes { border-top-color: var(--accent-strong); }
+.ledger-col h3 { margin: 0 0 8px; font-size: 1.1rem; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.ledger-col h3 span { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #bbf7d0; }
+.ledger-col.takes h3 span { color: var(--accent); }
+.ledger-col p { margin: 0; color: #cbd5e1; line-height: 1.55; }
+.question {
+  margin: 32px 0 0;
+  padding: 0 0 0 22px;
+  border-left: 3px solid var(--sun);
+  font-family: var(--display);
+  font-size: clamp(1.3rem, 2.6vw, 1.9rem);
+  line-height: 1.3;
+  max-width: 34ch;
+}
+.question em { font-style: normal; color: var(--sun-soft); }
+
+/* ---------- Application ---------- */
+.uses { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; margin-top: 28px; }
+.use { padding: 22px; border-radius: var(--radius); background: var(--bg-2); border: 1px solid var(--line); }
+.use h3 { margin: 0 0 12px; font-size: 1.05rem; color: var(--sun-soft); }
+.use p { margin: 0 0 8px; color: #cbd5e1; line-height: 1.5; font-size: 0.93rem; }
+.use p:last-child { margin-bottom: 0; }
+.use strong { color: white; }
+
+/* ---------- Comparison ---------- */
+.compare { border-radius: var(--radius); border: 1px solid var(--line); overflow: hidden; }
+.compare-row { display: grid; grid-template-columns: 150px 1fr 1fr; }
+.compare-row > span { padding: 13px 18px; border-top: 1px solid var(--line); line-height: 1.4; }
+.compare-row:first-child > span { border-top: none; }
+.compare-row > span:nth-child(1) { color: var(--muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.compare-row > span:nth-child(2) { color: var(--muted); }
+.compare-row > span:nth-child(3) { background: rgba(251, 191, 36, 0.07); color: white; font-weight: 600; }
+.compare-row.head > span { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; background: var(--bg-2); }
+.compare-row.head > span:nth-child(3) { color: var(--sun); background: rgba(251, 191, 36, 0.12); }
+
+/* ---------- Built ---------- */
+.built { list-style: none; padding: 0; margin: 24px 0 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+.built li { padding: 20px; border-radius: var(--radius); border: 1px dashed var(--line); display: grid; gap: 8px; align-content: start; }
+.built strong { color: var(--sun-soft); }
+.built span { color: #cbd5e1; font-size: 0.92rem; line-height: 1.5; }
+.data-cols.three { grid-template-columns: repeat(3, 1fr); }
+
 /* ---------- Data + footer ---------- */
 .section.fine { padding-bottom: 40px; }
 .data-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
@@ -262,7 +307,12 @@ h1, h2 { font-family: var(--display); font-weight: 700; letter-spacing: -0.01em;
   .band.totals { grid-template-columns: repeat(2, 1fr); }
   .totals > div:nth-child(2) { border-right: none; }
   .totals > div:nth-child(-n + 2) { border-bottom: 1px solid var(--line); }
-  .steps, .data-cols, .explore-list ul { grid-template-columns: 1fr; }
+  .steps, .data-cols, .data-cols.three, .explore-list ul, .ledger, .uses { grid-template-columns: 1fr; }
+  .built { grid-template-columns: 1fr 1fr; }
+  .compare-row { grid-template-columns: 1fr 1fr; }
+  .compare-row > span:nth-child(1) { grid-column: 1 / -1; padding-bottom: 0; }
+  .compare-row > span:nth-child(2), .compare-row > span:nth-child(3) { border-top: none; }
+  .compare-row.head > span:nth-child(1) { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Shadow Ledger</title>
-    <meta name="description" content="How much sunlight do America's skyscrapers take from the public, and did the city get enough homes in return?" />
+    <meta name="description" content="A cost-benefit model for skyscrapers: the sunlight a tower blocks compared with the homes it adds." />
     <script>
       // Older share links (/?date=…&bin=…) pointed at the explorer, which used to live here.
       if (/[?&](date|time|bin|park|play)=/.test(location.search)) location.replace(`explore.html${location.search}`);
@@ -21,19 +21,21 @@
       <nav class="nav">
         <a href="./" class="brand"><span class="brand-mark" aria-hidden="true"></span>Shadow Ledger</a>
         <div class="nav-links">
+          <a href="#problem">Problem</a>
+          <a href="#uses">Uses</a>
           <a href="#how">How it works</a>
+          <a href="#different">What's new</a>
           <a href="#cities">Cities</a>
-          <a href="#data">Data</a>
         </div>
       </nav>
 
       <div class="hero-copy">
-        <p class="eyebrow">A public ledger of private shadows</p>
+        <p class="eyebrow">A cost-benefit model for skyscrapers</p>
         <h1>Who gets the&nbsp;sunlight?</h1>
         <p class="lede">
-          Supertall towers take sunlight from streets and parks for hours every day.
-          Shadow Ledger measures how much sun each building takes from the public,
-          and whether the city got enough homes in return.
+          Shadow Ledger weighs what a tall building costs the public against what it gives back.
+          The cost is the sunlight it blocks on streets, sidewalks and parks. The benefit is the
+          homes inside it. We measure both for every building in eight U.S. downtowns.
         </p>
         <div class="cta">
           <a class="button primary" href="#cities">Pick a city</a>
@@ -64,28 +66,72 @@
         <div><span class="num" id="t-hours">—</span><span>sunny hours replayed</span></div>
       </section>
 
+      <section class="section" id="problem">
+        <p class="eyebrow">The problem</p>
+        <h2>Tall buildings are a trade-off</h2>
+        <div class="ledger">
+          <div class="ledger-col gives">
+            <h3>Benefit: new homes created</h3>
+            <p>Cities often let developers build taller skyscrapers if they add something the public needs, usually housing.</p>
+          </div>
+          <div class="ledger-col takes">
+            <h3>Cost: lost sunlight</h3>
+            <p>A tall tower also blocks sunlight on the streets and parks around it, and that hurts the climate too: shaded trees and plants grow less and absorb less carbon, and nearby rooftops can produce less solar power.</p>
+          </div>
+        </div>
+        <blockquote class="question">
+          So... when a tower blocks sunlight, <em>how many homes did the city get for it?</em>
+        </blockquote>
+      </section>
+
+      <section class="section" id="uses">
+        <p class="eyebrow">Application</p>
+        <h2>Who would use it, and how</h2>
+        <div class="uses">
+          <article class="use">
+            <h3>City planners</h3>
+            <p><strong>How:</strong> Check how existing towers score before approving new ones of a similar size.</p>
+            <p><strong>Why:</strong> To make sure height bonuses actually get the city enough housing.</p>
+          </article>
+          <article class="use">
+            <h3>Climate and park advocates</h3>
+            <p><strong>How:</strong> Use the park rankings and heatmap to find the green spaces losing the most sun.</p>
+            <p><strong>Why:</strong> To protect the trees and plants that cool cities and absorb carbon.</p>
+          </article>
+          <article class="use">
+            <h3>Developers and architects</h3>
+            <p><strong>How:</strong> Compare grades of buildings with different shapes and numbers of units.</p>
+            <p><strong>Why:</strong> To design towers that add more homes for the shade they cast.</p>
+          </article>
+          <article class="use">
+            <h3>Homebuyers and renters</h3>
+            <p><strong>How:</strong> Go through the year to see how much sun a street or building gets.</p>
+            <p><strong>Why:</strong> To know if an apartment or nearby park will be sunny or in shadow.</p>
+          </article>
+        </div>
+      </section>
+
       <section class="section" id="how">
         <p class="eyebrow">How it works</p>
-        <h2>Every sunny hour of a real year, counted</h2>
+        <h2>How the model works</h2>
         <p class="section-lede">
-          Zoning lets towers rise in exchange for public benefits like housing. The cost, a shadow on everyone
-          else, is rarely measured. We measure it, building by building.
+          We measure the cost (shade) and the benefit (homes) for each building, then divide one by the other.
         </p>
         <ol class="steps">
           <li class="step">
             <div class="step-art sun-art" aria-hidden="true"><span></span></div>
             <h3>Replay the weather</h3>
-            <p>We take every hour of the year the sun actually shone, from historical cloud and radiation data, and find where the sun was in the sky.</p>
+            <p>Using historical weather data, we find every hour in 2025 when the sun was actually out, and where it was in the sky.</p>
           </li>
           <li class="step">
             <div class="step-art shadow-art" aria-hidden="true"><span class="tower"></span><span class="shade"></span></div>
-            <h3>Cast every shadow</h3>
-            <p>For each of those hours we cast every building's shadow and measure the <em>public</em> ground it covers: streets, sidewalks, plazas and parks. Rooftops don't count.</p>
+            <h3>Measure the cost</h3>
+            <p>For each of those hours, we work out every building's shadow and how much <em>public</em> ground it covers: streets, sidewalks, plazas and parks. Rooftops don't count.</p>
           </li>
           <li class="step">
             <div class="step-art grade-art" aria-hidden="true"><span>A</span><span>C</span><span>F</span></div>
-            <h3>Divide by homes</h3>
-            <p>Shade per home shows whether a tower's shadow bought housing. Buildings are graded A–F against their neighbors. A slim luxury spire with few homes scores worst.</p>
+            <h3>Compare it to the benefit</h3>
+            <p>We divide a building's average shade by its number of homes to get <em>shade per home</em>. Lower is better. Each building gets an A–F grade compared with the others in its city.</p>
           </li>
         </ol>
 
@@ -100,11 +146,26 @@
         </div>
       </section>
 
+      <section class="section" id="different">
+        <p class="eyebrow">What's new</p>
+        <h2>How this compares to a normal shadow study</h2>
+        <p class="section-lede">Cities already require shadow studies for some new buildings. Those usually model one proposed tower on a few days of the year. We wanted to look at every building that already exists, over a full year, and weigh the shade against the housing.</p>
+        <div class="compare" role="table" aria-label="Typical shadow study compared with Shadow Ledger">
+          <div class="compare-row head" role="row"><span role="columnheader"></span><span role="columnheader">Usual shadow study</span><span role="columnheader">Shadow Ledger</span></div>
+          <div class="compare-row" role="row"><span role="rowheader">Buildings</span><span role="cell">One proposed tower</span><span role="cell">Every existing building in 8 downtowns</span></div>
+          <div class="compare-row" role="row"><span role="rowheader">Time</span><span role="cell">A few sample days</span><span role="cell">Every sunny hour of a real year</span></div>
+          <div class="compare-row" role="row"><span role="rowheader">Weather</span><span role="cell">Clear skies assumed</span><span role="cell">Actual cloud cover and sunshine</span></div>
+          <div class="compare-row" role="row"><span role="rowheader">Fairness</span><span role="cell">All shade blamed on the new tower</span><span role="cell">Towers aren't blamed for spots a shorter building already shades</span></div>
+          <div class="compare-row" role="row"><span role="rowheader">Question</span><span role="cell">Does it shade the park?</span><span role="cell">Is the shade worth the homes it adds?</span></div>
+          <div class="compare-row" role="row"><span role="rowheader">Who can use it</span><span role="cell">Consultants and review boards</span><span role="cell">Anyone, by searching an address</span></div>
+        </div>
+      </section>
+
       <section class="section" id="cities">
         <div class="section-head">
           <div>
-            <p class="eyebrow">Choose a city</p>
-            <h2 id="cities-title">Downtowns, one ledger</h2>
+            <p class="eyebrow">Cities</p>
+            <h2 id="cities-title">Pick a city</h2>
           </div>
           <div class="sort" role="radiogroup" aria-label="Sort cities">
             <span>Sort by</span>
@@ -117,9 +178,20 @@
         <div id="city-grid" class="city-grid"><p class="loading">Loading cities…</p></div>
       </section>
 
+      <section class="section" id="built">
+        <p class="eyebrow">Under the hood</p>
+        <h2>How we built it</h2>
+        <ul class="built">
+          <li><strong>Data pipeline</strong><span>A Python script downloads buildings, home counts, parks and a year of hourly weather for each city.</span></li>
+          <li><strong>Our own shadow math</strong><span>We wrote the sun-position and shadow code ourselves. It runs in background threads so the 3D map stays smooth.</span></li>
+          <li><strong>3D in the browser</strong><span>three.js draws about 57,000 buildings at their real heights, with live shadows.</span></li>
+          <li><strong>No build step</strong><span>About 2,900 lines of plain JavaScript and Python. It runs from one command.</span></li>
+        </ul>
+      </section>
+
       <section class="section fine" id="data">
-        <p class="eyebrow">Data &amp; caveats</p>
-        <div class="data-cols">
+        <p class="eyebrow">Data, limits &amp; next steps</p>
+        <div class="data-cols three">
           <div>
             <h3>Sources</h3>
             <ul>
@@ -134,6 +206,14 @@
               <li>Outside New York, home counts are estimated from building type and floor area unless OpenStreetMap lists the number of units. Mixed-use towers may show no homes.</li>
               <li>Buildings with no mapped height are drawn at a typical low-rise height.</li>
               <li>Only towers inside each study area are counted, so parks at the edges are undercounted.</li>
+              <li>Where shadows overlap, both towers are charged.</li>
+            </ul>
+          </div>
+          <div>
+            <h3>What's next</h3>
+            <ul>
+              <li><strong>Score proposed towers</strong> before they're approved, so the trade-off is known up front.</li>
+              <li><strong>Printable report cards</strong> that community boards can bring to public hearings.</li>
             </ul>
           </div>
         </div>
