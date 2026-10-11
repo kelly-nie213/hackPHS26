@@ -1,4 +1,4 @@
-// Hourly weather lookup from data/weather.json (Open-Meteo archive, NYC local time).
+// Hourly weather lookup from data/weather.json (Open-Meteo archive, the city's local time).
 // The file holds 24 entries per local calendar day starting at `start`.
 
 export function weatherAt(weather, dateStr, minutes) {

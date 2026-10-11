@@ -4,162 +4,145 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Shadow Ledger</title>
-    <meta name="description" content="How much sunlight do NYC's skyscrapers take from the public?" />
-    <link rel="stylesheet" href="styles.css" />
-    <script type="importmap">
-      {
-        "imports": {
-          "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-        }
-      }
+    <meta name="description" content="How much sunlight do America's skyscrapers take from the public, and did the city get enough homes in return?" />
+    <script>
+      // Older share links (/?date=…&bin=…) pointed at the explorer, which used to live here.
+      if (/[?&](date|time|bin|park|play)=/.test(location.search)) location.replace(`explore.html${location.search}`);
     </script>
-    <script type="module" src="src/main.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="home.css" />
+    <script type="module" src="src/home.js"></script>
   </head>
   <body>
-    <div id="scene"></div>
-    <div id="status">Loading…</div>
+    <header class="hero" id="top">
+      <canvas id="hero-canvas" aria-hidden="true"></canvas>
+      <nav class="nav">
+        <a href="./" class="brand"><span class="brand-mark" aria-hidden="true"></span>Shadow Ledger</a>
+        <div class="nav-links">
+          <a href="#how">How it works</a>
+          <a href="#cities">Cities</a>
+          <a href="#data">Data</a>
+        </div>
+      </nav>
 
-    <div class="left">
-    <header class="card intro">
-      <h1>Shadow Ledger</h1>
-      <p>Tall towers take sunlight from the public. Watch their shadows sweep across Central Park.</p>
-      <div class="search">
-        <input id="search" type="search" placeholder="Search a building or address…" autocomplete="off" spellcheck="false" aria-label="Search a building or address" />
-        <ul id="search-results" class="search-results" hidden></ul>
-        <p id="search-msg" class="search-msg" hidden></p>
+      <div class="hero-copy">
+        <p class="eyebrow">A public ledger of private shadows</p>
+        <h1>Who gets the&nbsp;sunlight?</h1>
+        <p class="lede">
+          Supertall towers take sunlight from streets and parks for hours every day.
+          Shadow Ledger measures how much sun each building takes from the public,
+          and whether the city got enough homes in return.
+        </p>
+        <div class="cta">
+          <a class="button primary" href="#cities">Pick a city</a>
+          <a class="button ghost" href="#how">How it works</a>
+        </div>
       </div>
-      <ul class="legend">
-        <li><span class="swatch" style="background: linear-gradient(90deg, #e9e4da, #f0a35e, #e4572e, #a4161a)"></span>Building height (low → 450 m)</li>
-        <li><span class="swatch" style="background: #7cb36b"></span>Parks</li>
-        <li><span class="swatch" style="background: #7c3aed"></span>Selected building's shadow</li>
-      </ul>
-      <p class="hint">Drag to pan · right-drag to tilt · scroll to zoom · click a building to score it</p>
-      <p id="rank-status" class="hint"></p>
+
+      <div class="hero-panel" role="group" aria-label="Shadow demo controls">
+        <div class="readout">
+          <div><span id="demo-park" class="big">—</span><span class="small">of the park in shadow</span></div>
+          <div class="demo-when"><span id="demo-time">—</span> · <span id="demo-season">—</span></div>
+        </div>
+        <input id="demo-slider" type="range" min="0" max="1000" value="350" aria-label="Time of day" />
+        <div class="seasons" role="radiogroup" aria-label="Season">
+          <button role="radio" data-season="summer">Summer</button>
+          <button role="radio" data-season="equinox">Equinox</button>
+          <button role="radio" data-season="winter" aria-checked="true">Winter</button>
+        </div>
+        <p class="hint">Drag the slider, or hover over the skyline, to move the sun.</p>
+      </div>
     </header>
 
-    <section class="card parks">
-      <h2>Sunlight lost in parks <small><span id="parks-year"></span> weather</small></h2>
-      <label class="inline">
-        Shade from towers taller than
-        <select id="tall-threshold">
-          <option value="100">100 m (330 ft)</option>
-          <option value="150" selected>150 m (490 ft)</option>
-          <option value="200">200 m (660 ft)</option>
-          <option value="300">300 m (980 ft)</option>
-        </select>
-      </label>
-      <p class="hint">Hours of direct sun the average spot in each park loses per year.</p>
-      <p id="parks-status" class="hint"></p>
-      <ol id="park-list" class="park-list"></ol>
-      <label class="toggle"><input type="checkbox" id="show-heatmap" checked /> Show heatmap</label>
-      <div class="heat-legend"><span>0 h</span><span class="ramp"></span><span>600+ h lost</span></div>
-    </section>
-    </div>
+    <main>
+      <section class="band totals" aria-label="Totals">
+        <div><span class="num" id="t-cities">—</span><span>cities</span></div>
+        <div><span class="num" id="t-buildings">—</span><span>buildings mapped</span></div>
+        <div><span class="num" id="t-towers">—</span><span>towers over 150 m</span></div>
+        <div><span class="num" id="t-hours">—</span><span>sunny hours replayed</span></div>
+      </section>
 
-    <aside class="side">
-      <section class="card" id="park-card" hidden>
-        <h2><span id="park-name"></span> <button id="park-close" class="icon" aria-label="Clear park">✕</button></h2>
-        <p id="park-meta" class="sub"></p>
-        <div class="score">
+      <section class="section" id="how">
+        <p class="eyebrow">How it works</p>
+        <h2>Every sunny hour of a real year, counted</h2>
+        <p class="section-lede">
+          Zoning lets towers rise in exchange for public benefits like housing. The cost, a shadow on everyone
+          else, is rarely measured. We measure it, building by building.
+        </p>
+        <ol class="steps">
+          <li class="step">
+            <div class="step-art sun-art" aria-hidden="true"><span></span></div>
+            <h3>Replay the weather</h3>
+            <p>We take every hour of the year the sun actually shone, from historical cloud and radiation data, and find where the sun was in the sky.</p>
+          </li>
+          <li class="step">
+            <div class="step-art shadow-art" aria-hidden="true"><span class="tower"></span><span class="shade"></span></div>
+            <h3>Cast every shadow</h3>
+            <p>For each of those hours we cast every building's shadow and measure the <em>public</em> ground it covers: streets, sidewalks, plazas and parks. Rooftops don't count.</p>
+          </li>
+          <li class="step">
+            <div class="step-art grade-art" aria-hidden="true"><span>A</span><span>C</span><span>F</span></div>
+            <h3>Divide by homes</h3>
+            <p>Shade per home shows whether a tower's shadow bought housing. Buildings are graded A–F against their neighbors. A slim luxury spire with few homes scores worst.</p>
+          </li>
+        </ol>
+
+        <div class="explore-list">
+          <h3>In each city you can</h3>
+          <ul>
+            <li><strong>Scrub through any day</strong> and watch shadows sweep the streets in 3D</li>
+            <li><strong>Click any building</strong> for its shade-per-home grade</li>
+            <li><strong>See which parks lose the most sun</strong>, and which towers take it</li>
+            <li><strong>Search an address</strong> to check your own block</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="section" id="cities">
+        <div class="section-head">
           <div>
-            <div id="park-lost" class="score-value"></div>
-            <div class="score-label">of direct sun lost per spot, per year</div>
+            <p class="eyebrow">Choose a city</p>
+            <h2 id="cities-title">Downtowns, one ledger</h2>
+          </div>
+          <div class="sort" role="radiogroup" aria-label="Sort cities">
+            <span>Sort by</span>
+            <button role="radio" data-sort="towers" aria-checked="true">Towers</button>
+            <button role="radio" data-sort="tallest">Tallest</button>
+            <button role="radio" data-sort="sun">Sunshine</button>
+            <button role="radio" data-sort="name">A–Z</button>
           </div>
         </div>
-        <p id="park-share" class="verdict"></p>
-        <dl class="stats">
-          <dt>Worst spot</dt><dd id="park-worst"></dd>
-          <dt>Total lost</dt><dd id="park-total"></dd>
-          <dt>Towers counted</dt><dd>&ge; <span id="park-threshold"></span></dd>
-        </dl>
-        <h3>Towers taking its sun</h3>
-        <ol id="park-towers" class="tower-list"></ol>
-        <p id="park-towers-empty" class="hint" hidden>No towers this tall shade it.</p>
-        <details class="method">
-          <summary>How is this calculated?</summary>
-          <p>For each of the <span id="sunny-hours"></span> hours of direct sunshine recorded in 2025 (Open-Meteo, with each hour weighted by its actual minutes of sun), we cast every tower's shadow at that hour's sun position.</p>
-          <p>A spot in the park <em>loses</em> that hour if a tower shades it and no shorter building already does. Towers aren't charged for shade the park would have had anyway.</p>
-          <p>Per-tower hours can add up to more than the total, since towers' shadows overlap.</p>
-          <p class="fine">Towers outside the mapped area (south of ~42nd St) aren't included.</p>
-        </details>
+        <div id="city-grid" class="city-grid"><p class="loading">Loading cities…</p></div>
       </section>
 
-      <section class="card" id="building-card" hidden>
-        <h2><span id="b-name"></span> <button id="b-close" class="icon" aria-label="Clear selection">✕</button></h2>
-        <p id="b-address" class="sub"></p>
-        <div class="score">
-          <div id="b-grade" class="grade"></div>
+      <section class="section fine" id="data">
+        <p class="eyebrow">Data &amp; caveats</p>
+        <div class="data-cols">
           <div>
-            <div id="b-per-home" class="score-value"></div>
-            <div class="score-label">public shade per home</div>
+            <h3>Sources</h3>
+            <ul>
+              <li><strong>New York:</strong> NYC Open Data building footprints (surveyed roof heights) and PLUTO tax lots (actual homes per lot). Parks from NYC Parks.</li>
+              <li><strong>Other cities:</strong> OpenStreetMap buildings, tower parts and parks. Heights come from mapped heights or floor counts.</li>
+              <li><strong>Weather:</strong> Open-Meteo historical archive, with hourly sunshine duration, cloud cover and radiation.</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Keep in mind</h3>
+            <ul>
+              <li>Outside New York, home counts are estimated from building type and floor area unless OpenStreetMap lists the number of units. Mixed-use towers may show no homes.</li>
+              <li>Buildings with no mapped height are drawn at a typical low-rise height.</li>
+              <li>Only towers inside each study area are counted, so parks at the edges are undercounted.</li>
+            </ul>
           </div>
         </div>
-        <p id="b-verdict" class="verdict"></p>
-        <dl class="stats">
-          <dt>Homes</dt><dd id="b-homes"></dd>
-          <dt>Height</dt><dd id="b-height"></dd>
-          <dt>Built</dt><dd id="b-year"></dd>
-          <dt>Sun blocked / yr</dt><dd id="b-blocked"></dd>
-          <dt>…in parks</dt><dd id="b-park"></dd>
-          <dt>Avg. shade cast</dt><dd id="b-avg"></dd>
-          <dt>Shadow now</dt><dd id="b-shadow-len"></dd>
-        </dl>
-        <details class="method">
-          <summary>How is this calculated?</summary>
-          <p>For every sunny hour of the weather year, we cast this building's shadow and measure how much <em>public ground</em> (streets, sidewalks, plazas, parks) it covers. Shade on rooftops doesn't count.</p>
-          <p><strong>Avg. shade cast</strong> is that area averaged over all sunny hours. <strong>Shade per home</strong> divides it by the homes on the lot (PLUTO residential units). Lower is better.</p>
-          <p>Grades compare against every residential building mapped: A = lowest 20% of shade per home, F = highest 20%.</p>
-          <p class="fine">Simplifications: shade that overlaps a neighbor's shadow still counts; shadows leaving the mapped area aren't counted.</p>
-        </details>
       </section>
+    </main>
 
-      <section class="card">
-        <h2>Sun <span id="sun-state" class="pill"></span></h2>
-        <div id="sunpath"></div>
-        <dl class="stats">
-          <dt>Altitude</dt><dd id="altitude">—</dd>
-          <dt>Direction</dt><dd id="azimuth">—</dd>
-          <dt>Sunrise</dt><dd id="sunrise">—</dd>
-          <dt>Sunset</dt><dd id="sunset">—</dd>
-          <dt>Daylight</dt><dd id="daylength">—</dd>
-        </dl>
-      </section>
-
-      <section class="card">
-        <h2>Weather <small><span id="weather-year"></span> actuals</small></h2>
-        <dl class="stats">
-          <dt>Cloud cover</dt><dd id="cloud">—</dd>
-          <dt>Direct sun</dt><dd id="direct">—</dd>
-        </dl>
-        <label class="toggle"><input type="checkbox" id="use-weather" checked /> Dim the sun by cloud cover</label>
-      </section>
-
-    </aside>
-
-    <footer class="card controls">
-      <button id="play" class="play" aria-label="Play">▶</button>
-      <div class="timeline">
-        <div class="timeline-top">
-          <span id="clock" class="clock">—</span>
-          <div class="presets">
-            <button data-preset="03-20">Spring equinox</button>
-            <button data-preset="06-21">Summer solstice</button>
-            <button data-preset="09-22">Fall equinox</button>
-            <button data-preset="12-21">Winter solstice</button>
-          </div>
-        </div>
-        <input id="time" type="range" min="0" max="1439" step="1" aria-label="Time of day" />
-        <div class="ticks"><span>12 AM</span><span>6 AM</span><span>12 PM</span><span>6 PM</span><span>12 AM</span></div>
-      </div>
-      <div class="when">
-        <input id="date" type="date" aria-label="Date" />
-        <select id="speed" aria-label="Playback speed">
-          <option value="20">20 min/s</option>
-          <option value="60" selected>1 hr/s</option>
-          <option value="180">3 hr/s</option>
-        </select>
-      </div>
+    <footer class="footer">
+      <span>Shadow Ledger</span>
+      <a href="#top">Back to top ↑</a>
     </footer>
   </body>
 </html>

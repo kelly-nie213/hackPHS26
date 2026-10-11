@@ -310,3 +310,35 @@ button.icon { border: none; background: none; cursor: pointer; color: var(--mute
   .controls { flex-wrap: wrap; }
   .when { grid-auto-flow: column; }
 }
+
+/* Explorer header: back to home + city switcher */
+.topnav { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; }
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-decoration: none;
+}
+.brand:hover { color: var(--accent); }
+.brand-mark {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fde047 50%, #1e293b 50%);
+}
+#city-picker {
+  font: inherit;
+  font-size: 0.8rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 4px 6px;
+  background: white;
+  color: var(--text);
+  cursor: pointer;
+}
+.note { font-size: 0.75rem; color: #92400e; background: #fef3c7; border-radius: 8px; padding: 6px 8px; }

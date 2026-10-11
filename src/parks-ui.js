@@ -52,7 +52,7 @@ export function setupParks({ city, parks, buildings, devs, grid, weather, lat, l
     }
     const input = prepared.map((p, i) => ({ ...p, tower: buildings[i].height >= threshold ? towerIndex.get(buildings[i].dev) : -1 }));
 
-    $('parks-status').textContent = 'Calculating 2025 sunlight… 0%';
+    $('parks-status').textContent = `Calculating ${weather.year} sunlight… 0%`;
     $('park-list').replaceChildren();
     worker = new Worker(new URL('./park-worker.js', import.meta.url), { type: 'module' });
     worker.onmessage = ({ data }) => {

@@ -1,4 +1,5 @@
 // A "development" = one tax lot (PLUTO BBL) and every building footprint on it.
+// In OpenStreetMap cities, a development is one building outline and its tower parts.
 // Homes are counted per lot, so shade per home is scored per development.
 
 import { prepareFootprints } from './shade.js';
@@ -12,8 +13,10 @@ const BUILDING_CLASS = {
   N: 'Institutional', U: 'Utility', V: 'Vacant land', Y: 'Government', Z: 'Miscellaneous',
 };
 
-export function describeClass(code) {
-  return code ? BUILDING_CLASS[code[0]] ?? code : null;
+/** What a lot is used for: NYC building class code, or the OSM building type. */
+export function describeLot(lot) {
+  if (lot?.type) return lot.type;
+  return lot?.class ? BUILDING_CLASS[lot.class[0]] ?? lot.class : null;
 }
 
 export function titleCase(address) {
@@ -21,7 +24,7 @@ export function titleCase(address) {
 }
 
 /** Groups footprints by tax lot. Sets b.dev on each building; returns Map key -> development. */
-export function groupDevelopments(buildings, lots) {
+export function groupDevelopments(buildings, lots, nicknames = []) {
   const devs = new Map();
   buildings.forEach((b, i) => {
     const key = b.bbl ?? `bin:${b.bin}`;
@@ -38,7 +41,11 @@ export function groupDevelopments(buildings, lots) {
     dev.height = tallest.height;
     dev.year = dev.lot?.yearBuilt || tallest.year;
     // Other footprints on a lot can be small historic buildings, so only trust the tallest's name.
-    dev.name = tallest.name ?? nicknameFor(dev.lot?.address) ?? titleCase(dev.lot?.address) ?? `Building ${tallest.bin}`;
+    dev.name =
+      tallest.name ??
+      nicknameFor(dev.lot?.address, nicknames) ??
+      titleCase(dev.lot?.address) ??
+      (/^\d+$/.test(tallest.bin) ? `Building ${tallest.bin}` : 'Unnamed building');
   }
   return devs;
 }

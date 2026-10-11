@@ -1,4 +1,4 @@
-// Solar position + New York time helpers.
+// Solar position + local (city) time helpers.
 // Sun math follows the formulas used by SunCalc (https://github.com/mourner/suncalc),
 // which are accurate to a fraction of a degree — plenty for shadow casting.
 
@@ -7,8 +7,6 @@ const DAY_MS = 86400000;
 const J1970 = 2440588;
 const J2000 = 2451545;
 const OBLIQUITY = RAD * 23.4397;
-
-export const NYC_TZ = 'America/New_York';
 
 /**
  * Sun position for an instant and place.
@@ -47,28 +45,38 @@ export function shadowOffset(height, { altitude, azimuth }) {
   return [-length * Math.sin(azimuth), -length * Math.cos(azimuth)];
 }
 
-const nycParts = new Intl.DateTimeFormat('en-US', {
-  timeZone: NYC_TZ,
-  hourCycle: 'h23',
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-  hour: '2-digit',
-  minute: '2-digit',
-});
+const formatters = new Map();
 
-function nycOffsetMs(date) {
-  const p = Object.fromEntries(nycParts.formatToParts(date).map((x) => [x.type, x.value]));
+function partsFormatter(timeZone) {
+  if (!formatters.has(timeZone)) {
+    formatters.set(
+      timeZone,
+      new Intl.DateTimeFormat('en-US', {
+        timeZone,
+        hourCycle: 'h23',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+    );
+  }
+  return formatters.get(timeZone);
+}
+
+function offsetMs(date, timeZone) {
+  const p = Object.fromEntries(partsFormatter(timeZone).formatToParts(date).map((x) => [x.type, x.value]));
   const wallAsUtc = Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute);
   return wallAsUtc - Math.floor(date.valueOf() / 60000) * 60000;
 }
 
-/** The instant when NYC clocks read `dateStr` ('YYYY-MM-DD') at `minutes` past midnight. */
-export function nycTime(dateStr, minutes) {
+/** The instant when clocks in `timeZone` read `dateStr` ('YYYY-MM-DD') at `minutes` past midnight. */
+export function localTime(dateStr, minutes, timeZone) {
   const [y, m, d] = dateStr.split('-').map(Number);
   const wall = Date.UTC(y, m - 1, d, 0, minutes);
-  let t = wall - nycOffsetMs(new Date(wall));
-  t = wall - nycOffsetMs(new Date(t)); // second pass settles DST-change days
+  let t = wall - offsetMs(new Date(wall), timeZone);
+  t = wall - offsetMs(new Date(t), timeZone); // second pass settles DST-change days
   return new Date(t);
 }
 
@@ -76,13 +84,13 @@ export function nycTime(dateStr, minutes) {
 const HORIZON = RAD * -0.833;
 
 /**
- * Sun positions sampled across one NYC calendar day, plus sunrise/sunset
+ * Sun positions sampled across one local calendar day, plus sunrise/sunset
  * in minutes after local midnight (null if the sun never crosses the horizon).
  */
-export function solarDay(dateStr, lat, lon, stepMinutes = 5) {
+export function solarDay(dateStr, lat, lon, timeZone, stepMinutes = 5) {
   const samples = [];
   for (let m = 0; m <= 1440; m += stepMinutes) {
-    samples.push({ minutes: m, ...sunPosition(nycTime(dateStr, m), lat, lon) });
+    samples.push({ minutes: m, ...sunPosition(localTime(dateStr, m, timeZone), lat, lon) });
   }
   let sunrise = null;
   let sunset = null;

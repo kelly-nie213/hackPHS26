@@ -13,7 +13,7 @@
 // sunny hour. Simplification: a cell already shaded by a neighbor still counts, so
 // towers in dense areas are charged for some shade they don't add on their own.
 
-import { sunPosition, nycTime } from './sun.js';
+import { sunPosition, localTime } from './sun.js';
 import { convexHull } from './shadows.js';
 
 export const CATEGORY = { building: 0, open: 1, park: 2 };
@@ -82,7 +82,7 @@ export function sunshineSamples(weather, lat, lon, groupDays = 7) {
       if (weight <= 0) continue;
       sunnyHours += weight;
       // Entry `hour` covers the hour ending at hour:00, so use its midpoint.
-      const sun = sunPosition(nycTime(date, hour * 60 - 30), lat, lon);
+      const sun = sunPosition(localTime(date, hour * 60 - 30, weather.timezone), lat, lon);
       if (sun.altitude < MIN_ALTITUDE) continue;
       const k = 1 / Math.tan(sun.altitude);
       samples.push({ kx: -k * Math.sin(sun.azimuth), ky: -k * Math.cos(sun.azimuth), weight });

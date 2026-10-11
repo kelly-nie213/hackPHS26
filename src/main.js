@@ -1,24 +1,21 @@
 import * as THREE from 'three';
 import { makeProjection, projectPolygons } from './geo.js';
-import { sunPosition, sunDirection, nycTime, solarDay } from './sun.js';
+import { sunPosition, sunDirection, localTime, solarDay } from './sun.js';
 import { buildingShadow } from './shadows.js';
 import { weatherAt } from './weather.js';
 import { createCityScene } from './scene.js';
 import { createSunPath } from './sunpath.js';
 import { buildGroundGrid, sunshineSamples, prepareFootprints, developmentShade } from './shade.js';
-import { groupDevelopments, rankDevelopments, gradeFor, describeClass, titleCase } from './developments.js';
-import { createSearchIndex, geocode } from './search.js';
+import { groupDevelopments, rankDevelopments, gradeFor, describeLot, titleCase } from './developments.js';
+import { createSearchIndex, geocode, nicknamesFor } from './search.js';
 import { setupParks } from './parks-ui.js';
 
 const $ = (id) => document.getElementById(id);
 const DEG = 180 / Math.PI;
 const M_TO_FT = 3.28084;
 
-// Initial camera: looking north up 57th St's "Billionaires' Row" toward Central Park.
-const START_VIEW = { lat: 40.7655, lon: -73.978, offset: [-350, 1100, 1700] };
-
 const state = {
-  date: null, // 'YYYY-MM-DD', NYC local
+  date: null, // 'YYYY-MM-DD', the city's local date
   minutes: 9 * 60, // minutes after local midnight
   playing: false,
   speed: 60, // simulated minutes per real second
@@ -74,12 +71,39 @@ function lightingFor(altDeg, cloud) {
   };
 }
 
+/** The city from ?city=, defaulting to New York (older share links have no city). */
+async function loadPlace(params) {
+  const { cities } = await loadJSON('data/cities.json');
+  const place = cities.find((c) => c.id === params.get('city')) ?? cities.find((c) => c.id === 'nyc') ?? cities[0];
+  return { place, cities };
+}
+
+/** Header copy, city switcher and method notes for the chosen city. */
+function showPlace(place, cities) {
+  document.title = `${place.name} · Shadow Ledger`;
+  $('city-name').textContent = place.name;
+  $('city-tagline').textContent = place.tagline;
+  const picker = $('city-picker');
+  picker.replaceChildren(...cities.map((c) => new Option(`${c.name}, ${c.state}`, c.id, false, c.id === place.id)));
+  picker.addEventListener('change', () => (location.href = `explore.html?city=${picker.value}`));
+  $('search').placeholder = `Search a building or address in ${place.name}…`;
+  $('homes-source').textContent = place.homesEstimated
+    ? 'homes on the lot (from OpenStreetMap: mapped unit counts where known, otherwise estimated from building type and floor area)'
+    : 'homes on the lot (PLUTO residential units)';
+  $('area-note').textContent = place.note ?? `Only towers inside the mapped area (${place.area}) are included.`;
+  $('data-source').textContent = place.dataSource;
+  if (place.homesEstimated) $('estimate-note').hidden = false;
+}
+
 async function main() {
   const status = $('status');
-  status.textContent = 'Loading NYC building footprints…';
-  let buildingData, parkData, weather;
+  const params = new URLSearchParams(location.search);
+  let place, cities, buildingData, parkData, weather;
   try {
-    [buildingData, parkData, weather] = await Promise.all(['data/buildings.json', 'data/parks.json', 'data/weather.json'].map(loadJSON));
+    ({ place, cities } = await loadPlace(params));
+    showPlace(place, cities);
+    status.textContent = `Loading ${place.name} building footprints…`;
+    [buildingData, parkData, weather] = await Promise.all(['buildings', 'parks', 'weather'].map((f) => loadJSON(`data/${place.id}/${f}.json`)));
   } catch (err) {
     status.innerHTML = `Couldn't load data (${err.message}).<br>Run <code>python3 scripts/fetch_data.py</code>, then serve this folder with <code>python3 -m http.server</code>.`;
     status.classList.add('error');
@@ -101,11 +125,11 @@ async function main() {
   const city = createCityScene($('scene'), radius);
   city.addParks(parks);
   city.addBuildings(buildings);
-  city.lookAt(...proj.toXY(START_VIEW.lon, START_VIEW.lat), START_VIEW.offset);
+  city.lookAt(...proj.toXY(place.view.lon, place.view.lat), place.view.offset);
   status.remove();
 
   // Shade-per-home setup: ground grid, a year of sunny hours, developments, background ranking.
-  const devs = groupDevelopments(buildings, buildingData.lots);
+  const devs = groupDevelopments(buildings, buildingData.lots, nicknamesFor(place.id));
   const grid = buildGroundGrid(halfW, halfH, parks, buildings);
   const { samples: sunSamples, sunnyHours } = sunshineSamples(weather, lat, lon);
   let ranking = null;
@@ -114,6 +138,7 @@ async function main() {
     onDone: (r) => {
       ranking = r;
       $('rank-status').textContent = '';
+      if (devs.has(state.selected)) renderDevelopment(devs.get(state.selected)); // swap the "…" for a grade
       updateSelection();
     },
   });
@@ -130,6 +155,7 @@ async function main() {
   state.date = `${year}-06-21`;
   dateInput.value = state.date;
   $('weather-year').textContent = year;
+  $('method-year').textContent = year;
   document.querySelectorAll('[data-preset]').forEach((btn) => {
     btn.addEventListener('click', () => setDate(`${year}-${btn.dataset.preset}`));
   });
@@ -137,7 +163,7 @@ async function main() {
   function setDate(dateStr) {
     state.date = dateStr;
     dateInput.value = dateStr;
-    state.day = solarDay(dateStr, lat, lon);
+    state.day = solarDay(dateStr, lat, lon, place.timezone);
     const { sunrise, sunset, samples } = state.day;
     city.setSunPath(samples.map(sunDirection));
     sunPath.setDay(samples);
@@ -155,7 +181,7 @@ async function main() {
   }
 
   function update() {
-    const when = nycTime(state.date, state.minutes);
+    const when = localTime(state.date, state.minutes, place.timezone);
     const sun = sunPosition(when, lat, lon);
     const altDeg = sun.altitude * DEG;
     const wx = weatherAt(weather, state.date, state.minutes);
@@ -180,7 +206,7 @@ async function main() {
     return dev.shade;
   }
 
-  function updateSelection(sun = sunPosition(nycTime(state.date, state.minutes), lat, lon)) {
+  function updateSelection(sun = sunPosition(localTime(state.date, state.minutes, place.timezone), lat, lon)) {
     const dev = devs.get(state.selected);
     $('building-card').hidden = !dev;
     if (!dev) {
@@ -199,8 +225,8 @@ async function main() {
     const shade = devShade(dev);
     $('b-name').textContent = dev.name;
     const address = titleCase(lot?.address);
-    $('b-address').textContent = [address !== dev.name ? address : null, describeClass(lot?.class)].filter(Boolean).join(' · ');
-    $('b-homes').textContent = dev.homes.toLocaleString();
+    $('b-address').textContent = [address !== dev.name ? address : null, describeLot(lot)].filter(Boolean).join(' · ');
+    $('b-homes').textContent = `${place.homesEstimated && lot?.homesSource !== 'mapped' && dev.homes ? '~' : ''}${dev.homes.toLocaleString()}`;
     $('b-height').textContent = `${Math.round(dev.height)} m (${Math.round(dev.height * M_TO_FT).toLocaleString()} ft)`;
     $('b-year').textContent = dev.year ?? 'unknown';
     $('b-blocked').textContent = `${fmtBig(shade.publicM2h)} m²·h`;
@@ -211,8 +237,10 @@ async function main() {
     if (dev.homes === 0) {
       grade.textContent = '✕';
       grade.dataset.grade = 'none';
-      $('b-per-home').textContent = 'No homes';
-      $('b-verdict').textContent = 'Creates no housing, so all of its shade buys zero homes.';
+      $('b-per-home').textContent = place.homesEstimated ? 'No homes mapped' : 'No homes';
+      $('b-verdict').textContent = place.homesEstimated
+        ? "OpenStreetMap doesn't list it as housing, so none of its shade is buying homes (as far as the map knows)."
+        : 'Creates no housing, so all of its shade buys zero homes.';
       return;
     }
     const perHome = shade.publicM2h / dev.homes;
@@ -260,7 +288,7 @@ async function main() {
     }
     downAt = null;
   });
-  setupSearch(devs, buildings, select);
+  setupSearch(devs, buildings, select, place, proj);
 
   // Sunlight each park loses to tall towers over the weather year.
   const parkPanel = setupParks({
@@ -315,8 +343,7 @@ async function main() {
     update();
   };
 
-  // Shareable moments: ?date=2025-12-21&time=13:30&play=0&bin=1090180
-  const params = new URLSearchParams(location.search);
+  // Shareable moments: ?city=nyc&date=2025-12-21&time=13:30&play=0&bin=1090180
   const [hh, mm] = (params.get('time') ?? '').split(':').map(Number);
   if (Number.isFinite(hh)) state.minutes = hh * 60 + (mm || 0);
   setDate(/^\d{4}-\d{2}-\d{2}$/.test(params.get('date')) ? params.get('date') : state.date);
@@ -330,8 +357,21 @@ function fmtBig(n) {
   return Math.round(n).toLocaleString();
 }
 
-/** Search box: local suggestions while typing; Enter falls back to NYC GeoSearch. */
-function setupSearch(devs, buildings, select) {
+/** Is [x, y] inside any of a building's polygons (even-odd over all rings)? */
+function insideBuilding([x, y], polygons) {
+  let inside = false;
+  for (const ring of polygons.flat()) {
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      const [x0, y0] = ring[j];
+      const [x1, y1] = ring[i];
+      if (y0 > y !== y1 > y && x < x0 + ((y - y0) * (x1 - x0)) / (y1 - y0)) inside = !inside;
+    }
+  }
+  return inside;
+}
+
+/** Search box: local suggestions while typing; Enter falls back to the city's geocoder. */
+function setupSearch(devs, buildings, select, place, proj) {
   const input = $('search');
   const list = $('search-results');
   const msg = $('search-msg');
@@ -340,7 +380,7 @@ function setupSearch(devs, buildings, select) {
     if (dev.lot?.address) entries.push({ label: titleCase(dev.lot.address), key: dev.key });
     if (dev.name !== titleCase(dev.lot?.address)) entries.push({ label: dev.name, key: dev.key });
   }
-  const index = createSearchIndex(entries);
+  const index = createSearchIndex(entries, nicknamesFor(place.id));
   let results = [];
   let active = 0;
 
@@ -391,10 +431,18 @@ function setupSearch(devs, buildings, select) {
       if (!text) return;
       say('Looking up address…');
       try {
-        const hit = await geocode(text.match(/manhattan|new york|ny\b/i) ? text : `${text}, Manhattan`);
-        const building = hit && (buildings.find((b) => b.bin === hit.bin) ?? buildings.find((b) => b.bbl === hit.bbl));
-        if (building) choose({ label: titleCase(hit.label.split(',')[0]), key: building.dev });
-        else say(hit ? `${hit.label.split(',')[0]} is outside the mapped area (Midtown to 110th St around Central Park).` : 'No address found.');
+        const hit = await geocode(text, place);
+        const point = hit && proj.toXY(hit.lon, hit.lat);
+        const building =
+          hit &&
+          (buildings.find((b) => b.bin === hit.bin) ??
+            buildings.find((b) => b.bbl === hit.bbl) ??
+            buildings.find((b) => insideBuilding(point, b.polygons)));
+        // "233, South Wacker Drive, Loop, …" (Nominatim) or "217 W 57th St, Manhattan, …" (GeoSearch)
+        const parts = hit?.label.split(',') ?? [];
+        const label = titleCase(/^\d+$/.test(parts[0]?.trim()) ? `${parts[0]}${parts[1]}` : parts[0]);
+        if (building) choose({ label, key: building.dev });
+        else say(hit ? `${label} is outside the mapped area (${place.area}).` : 'No address found.');
       } catch {
         say('Address lookup failed. Check your connection.');
       }
